@@ -1,6 +1,8 @@
 #ifndef TESTER_H
 #define TESTER_H
 
+#include <ctime>
+
 bool basicBoardMechanics() {
     Grid grid;
     if(!grid.add(16, 5)) {
@@ -36,9 +38,12 @@ bool tester() {
     if(!basicBoardMechanics()) {
         return false;
     }
+    clock_t begin = clock();
     if(!solving()) {
        return false;
     }
+    clock_t end = clock();
+    std::cout << "Solving took: " << double(end - begin) / CLOCKS_PER_SEC << " seconds." << std::endl;
 
     std::cout <<"-------------  END OF TESTER  -------------" << std::endl;
     return true;

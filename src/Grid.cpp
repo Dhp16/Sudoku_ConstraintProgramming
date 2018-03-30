@@ -1,9 +1,9 @@
 #include "Grid.h"
 
-#include <set>
 #include <iostream>
 #include <utility>
 #include <string>
+#include <cmath>
 
 #define isLegit(a) (a > 0 && a < 10)
 
@@ -16,14 +16,21 @@ std::string printBoolean(const bool isTrue) {
 }
 
 Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
-    //_possiblesForEachSquare.resize(81, std::vector<unsigned short>(9));
     _grid.resize(81);
-    mapIndexToSquare();
     std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
     stringToVector(grid);
     _initialGrid = _grid;
     bool isValidGrid = isValid();
     bool isSolution = isValid(true);
+    setupDomains();
+    mapIndexToSquare();
+    domainForEach();
+
+    for(unsigned int i = 0; i < _domainForEachIndex.size(); ++i) {
+        std::cout << i << "  " << _domainForEachIndex[i].size() << std::endl;
+    }
+
+
     std::cout <<"isValid: " << printBoolean(isValidGrid) << std::endl;
     std::cout <<"isSolution: " << printBoolean(isSolution) << std::endl;
 }
@@ -59,7 +66,6 @@ bool Grid::isValid(const bool isSolutionCheck){
     }
     return true;
 }
-
 void Grid::createLine(const unsigned short index, std::vector<unsigned short*> &line){
     for(unsigned short i = 0; i < 9; ++i) {
         line[i] = &_grid[i+index*9];
@@ -114,7 +120,6 @@ bool Grid::resetBoard() {
     _latestIndexChanged = 81;
     return (_grid == _initialGrid);
 }
-
 void Grid::mapIndexToSquare() { 
     for(unsigned int i = 0; i < 81; ++i) {
         if((i % 9) < 3  ) {
@@ -156,5 +161,28 @@ void Grid::mapIndexToSquare() {
                     i/9 - (i/9 - 6) + 2));
             }
         }
+    }
+}
+void Grid::domainForEach() {
+    for(unsigned short i = 0; i < 81; ++i) {
+        std::vector<unsigned short> entitiesToCheck(3); // indices only
+        entitiesToCheck[0] = std::floor(i / 9); // line to check
+        entitiesToCheck[1] = (i % 9 ) +9; // column to check
+        entitiesToCheck[2] = _indexToSquare[i]+18; // square to check
+        for(unsigned short j = 0; j < 3; ++j) {
+            for(unsigned short k = 0; k < 9; ++k) {
+                _domainForEachIndex[i].erase(*_entities[entitiesToCheck[j]][k]);
+            }
+        }
+    }
+}
+void Grid::setupDomains() {
+    _domainForEachIndex.resize(81);
+    std::set<unsigned short> options;
+    for (unsigned short i = 0; i < 9; ++i) {
+        options.insert(i);
+    }
+    for(unsigned short i = 0; i < 81; ++i) {
+        _domainForEachIndex[i] = options;
     }
 }

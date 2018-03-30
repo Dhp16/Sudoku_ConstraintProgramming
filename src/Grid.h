@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 class Grid
 {
@@ -23,12 +24,14 @@ class Grid
     void createSquare(const unsigned short index, std::vector<unsigned short*>& cube);
     void domainForEach();
     void mapIndexToSquare();
+    void setupDomains();
 
     std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;
     std::vector<unsigned short> _initialGrid;
     unsigned short _latestIndexChanged;
     std::map<unsigned short, unsigned short> _indexToSquare;
+    std::vector<std::set<unsigned short>> _domainForEachIndex;
 };
 
 

@@ -151,7 +151,9 @@ int Grid::domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
 // constructor
 Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
     _grid.resize(81);
-    std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
+    //std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
+    std::string grid = "700000006005000200030407090002108500300709001009204300080901050003000700100000008";
+    //std::string grid = "800000000003600000070090200050007000000045700000100030001000068008500010090000400";
     stringToVector(grid);
     _initialGrid = _grid;
     int counter = 0;
@@ -364,6 +366,7 @@ bool Grid::solve() {
     int counter = 0;
     while(true) {
         counter++;
+        domainTotal(_domainForEachIndex);
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){

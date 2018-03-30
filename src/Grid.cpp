@@ -121,6 +121,21 @@ void addDigitsForSquare(const unsigned short squareNumber, std::set<unsigned sho
         break;
     }
 }
+int domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
+    int counter = 0;
+    int counterV2 = 0;
+    for (unsigned int i = 0; i < domainOptions.size(); ++i)
+    {
+        if(domainOptions[i].empty())
+            counterV2++;
+        for (std::set<unsigned short>::iterator it = domainOptions[i].begin(); it != domainOptions[i].end();
+             ++it){
+            counter++;
+        }
+    }
+    std::cout << "0 size domains: " << counterV2 << " total size: " << counter << std::endl;
+    return counter;
+}
 
 // constructor
 Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
@@ -128,11 +143,28 @@ Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short
     std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
     stringToVector(grid);
     _initialGrid = _grid;
+    int counter = 0;
+    for(unsigned int i = 0; i < _grid.size(); ++i) {
+        if(_grid[i] != 0)
+            counter++;
+    }
+    std::cout << counter << " numbers provided, " << 81-counter << " to find." << std::endl;
     setupEntities();
     setupDomains();
     mapIndexToSquare();
     domainForEach();
     setupIndexLinkage();
+
+    for (unsigned int i = 0; i < _domainForEachIndex.size(); ++i)  {
+        std::cout << "\n" << i << ":     ";
+        for (std::set<unsigned short>::iterator it = _domainForEachIndex[i].begin(); it != _domainForEachIndex[i].end();
+             ++it) {
+            std::cout << *it << "  ";
+        }
+    }
+    std::cout << std::endl;
+
+
 
     bool isValidGrid = isValid();
     bool isSolution = isValid(true);
@@ -146,6 +178,9 @@ Grid::~Grid(){}
 void Grid::stringToVector(const std::string& grid) {
     for(unsigned short i = 0; i < grid.size(); ++i) {
         _grid[i] = (unsigned short)grid[i]-48;
+        if(_grid[i]!= 0) {
+            _goldenOriginals.insert(i);
+        }
     }
     return;
 }
@@ -226,6 +261,9 @@ void Grid::mapIndexToSquare() {
 }
 void Grid::domainForEach() {
     for(unsigned short i = 0; i < 81; ++i) {
+        if(_goldenOriginals.find(i) != _goldenOriginals.end()){
+            _domainForEachIndex[i].clear();
+        }
         std::vector<unsigned short> entitiesToCheck(3); // indices only
         entitiesToCheck[0] = std::floor(i / 9); // line to check
         entitiesToCheck[1] = (i % 9 ); // column to check
@@ -321,14 +359,20 @@ bool Grid::isValid(const bool isSolutionCheck){
 }
 bool Grid::solve() {
     bool jump = false;
+    int counter = 0;
     while(true) {
+        counter++;
+        std::cout << "\niteration: " << counter << std::endl; domainTotal(_domainForEachIndex);
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){
-                    // update domainForEach
                     removeChangeFromDomains(i, *_domainForEachIndex[i].begin());
+                    std::cout << "domain for that index: " << _domainForEachIndex[i].size() << std::endl;
                     jump = true;
                     break;
+                }
+                else {
+                    //std::cout << "Failed to add!" << std::endl;
                 }
             }
         }

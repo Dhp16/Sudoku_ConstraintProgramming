@@ -40,6 +40,7 @@ class Grid
     std::map<unsigned short, unsigned short> _indexToSquare;
     std::vector<std::set<unsigned short>> _domainForEachIndex;
     std::vector<std::set<unsigned short>> _indexLinkage; 
+    std::set<unsigned short> _goldenOriginals;
 };
 
 

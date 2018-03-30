@@ -3,13 +3,24 @@
 #include <set>
 #include <iostream>
 #include <utility>
+#include <string>
+
+std::string printBoolean(const bool isTrue) {
+    if(isTrue) {
+        return std::string("true");
+    } else {
+        return std::string("false");
+    }
+}
 
 Grid::Grid() {
     _grid.resize(81);
     std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
     stringToVector(grid);
-    bool success = createAndCheckAllEntities();
-    std::cout <<" Success: " << success << std::endl;
+    bool isValidGrid = isValid();
+    bool isSolution = isValid(true);
+    std::cout <<"isValid: " << printBoolean(isValidGrid) << std::endl;
+    std::cout <<"isSolution: " << printBoolean(isSolution) << std::endl;
 }
 
 Grid::~Grid(){}
@@ -21,7 +32,7 @@ void Grid::stringToVector(const std::string& grid) {
     return;
 }
 
-bool Grid::createAndCheckAllEntities() const{
+bool Grid::isValid(const bool isSolutionCheck) const{
     std::vector<std::vector<unsigned short>> entities(27, std::vector<unsigned short>(9));
     unsigned short nEntities = 0;
     for(unsigned int i = 0; i < 9; ++i) {
@@ -32,10 +43,12 @@ bool Grid::createAndCheckAllEntities() const{
     for(unsigned short i = 0; i < 27; ++i) {
         std::set<unsigned short> entity;
         for(unsigned short j = 0; j < 9; ++j) {
+            if(isSolutionCheck && entities[i][j] == 0) {
+                return false;
+            }
             std::pair<std::set<unsigned short>::iterator, bool> success =
                 entity.insert(entities[i][j]);
             if(!success.second && entities[i][j] != 0) {
-                std::cout <<"Failed on entity: " << i << std::endl;
                 return false;
             }
         }

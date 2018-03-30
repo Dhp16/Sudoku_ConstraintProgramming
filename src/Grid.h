@@ -9,7 +9,7 @@ class Grid
   public:
     Grid();
     ~Grid();
-    bool createAndCheckAllEntities() const;
+    bool isValid(const bool isSolutionCheck=false) const;
 
   private:
     void stringToVector(const std::string& grid);

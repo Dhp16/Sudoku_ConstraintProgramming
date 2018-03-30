@@ -1,11 +1,12 @@
 #include <iostream>
-
 #include "Grid.h"
 
-int main() {
-    std::cout << "Hello world "<< std::endl;
-
+void tester() {
     Grid grid;
-    
+}
+
+
+int main() {
+    tester();    
     return 0;    
 }

@@ -126,8 +126,9 @@ int domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
     int counterV2 = 0;
     for (unsigned int i = 0; i < domainOptions.size(); ++i)
     {
-        if(domainOptions[i].empty())
+        if(domainOptions[i].empty()) {
             counterV2++;
+        }
         for (std::set<unsigned short>::iterator it = domainOptions[i].begin(); it != domainOptions[i].end();
              ++it){
             counter++;
@@ -154,17 +155,6 @@ Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short
     mapIndexToSquare();
     domainForEach();
     setupIndexLinkage();
-
-    for (unsigned int i = 0; i < _domainForEachIndex.size(); ++i)  {
-        std::cout << "\n" << i << ":     ";
-        for (std::set<unsigned short>::iterator it = _domainForEachIndex[i].begin(); it != _domainForEachIndex[i].end();
-             ++it) {
-            std::cout << *it << "  ";
-        }
-    }
-    std::cout << std::endl;
-
-
 
     bool isValidGrid = isValid();
     bool isSolution = isValid(true);
@@ -260,14 +250,15 @@ void Grid::mapIndexToSquare() {
     }
 }
 void Grid::domainForEach() {
-    for(unsigned short i = 0; i < 81; ++i) {
+    for(unsigned short i = 0; i < 60; ++i) {
         if(_goldenOriginals.find(i) != _goldenOriginals.end()){
             _domainForEachIndex[i].clear();
         }
         std::vector<unsigned short> entitiesToCheck(3); // indices only
-        entitiesToCheck[0] = std::floor(i / 9); // line to check
-        entitiesToCheck[1] = (i % 9 ); // column to check
-        entitiesToCheck[2] = _indexToSquare[i]+18; // square to check
+        entitiesToCheck[0] = std::floor(i / 9);     // line to check
+        entitiesToCheck[1] = i % 9 + 9;              // column to check
+        entitiesToCheck[2] = _indexToSquare[i] + 18;     // square to check
+        
         for(unsigned short j = 0; j < 3; ++j) {
             for(unsigned short k = 0; k < 9; ++k) {
                 _domainForEachIndex[i].erase(*_entities[entitiesToCheck[j]][k]);

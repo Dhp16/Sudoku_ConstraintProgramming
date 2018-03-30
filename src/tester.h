@@ -33,9 +33,9 @@ bool solving() {
 
 bool tester() {
     std::cout <<"------------- START OF TESTER -------------" << std::endl;
-    // if(!basicBoardMechanics()) {
-    //     return false;
-    // }
+    if(!basicBoardMechanics()) {
+        return false;
+    }
     if(!solving()) {
        return false;
     }

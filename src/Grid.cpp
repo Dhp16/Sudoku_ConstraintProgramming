@@ -15,56 +15,139 @@ std::string printBoolean(const bool isTrue) {
     }
 }
 
+// TEMP
+void addDigitsForSquare(const unsigned short squareNumber, std::set<unsigned short> &linkedIndices)
+{
+    switch (squareNumber)
+    {
+    case 0:
+        linkedIndices.insert(0);
+        linkedIndices.insert(1);
+        linkedIndices.insert(2);
+        linkedIndices.insert(9);
+        linkedIndices.insert(10);
+        linkedIndices.insert(11);
+        linkedIndices.insert(18);
+        linkedIndices.insert(19);
+        linkedIndices.insert(20);
+        break;
+    case 1:
+        linkedIndices.insert(3);
+        linkedIndices.insert(4);
+        linkedIndices.insert(5);
+        linkedIndices.insert(12);
+        linkedIndices.insert(13);
+        linkedIndices.insert(14);
+        linkedIndices.insert(21);
+        linkedIndices.insert(22);
+        linkedIndices.insert(23);
+        break;
+    case 2:
+        linkedIndices.insert(6);
+        linkedIndices.insert(7);
+        linkedIndices.insert(8);
+        linkedIndices.insert(15);
+        linkedIndices.insert(16);
+        linkedIndices.insert(17);
+        linkedIndices.insert(24);
+        linkedIndices.insert(25);
+        linkedIndices.insert(26);
+        break;
+    case 3:
+        linkedIndices.insert(27);
+        linkedIndices.insert(28);
+        linkedIndices.insert(29);
+        linkedIndices.insert(36);
+        linkedIndices.insert(37);
+        linkedIndices.insert(38);
+        linkedIndices.insert(45);
+        linkedIndices.insert(46);
+        linkedIndices.insert(47);
+        break;
+    case 4:
+        linkedIndices.insert(30);
+        linkedIndices.insert(31);
+        linkedIndices.insert(32);
+        linkedIndices.insert(39);
+        linkedIndices.insert(40);
+        linkedIndices.insert(41);
+        linkedIndices.insert(48);
+        linkedIndices.insert(49);
+        linkedIndices.insert(50);
+        break;
+    case 5:
+        linkedIndices.insert(33);
+        linkedIndices.insert(34);
+        linkedIndices.insert(35);
+        linkedIndices.insert(42);
+        linkedIndices.insert(43);
+        linkedIndices.insert(44);
+        linkedIndices.insert(51);
+        linkedIndices.insert(52);
+        linkedIndices.insert(53);
+        break;
+    case 6:
+        linkedIndices.insert(54);
+        linkedIndices.insert(55);
+        linkedIndices.insert(56);
+        linkedIndices.insert(63);
+        linkedIndices.insert(64);
+        linkedIndices.insert(65);
+        linkedIndices.insert(72);
+        linkedIndices.insert(73);
+        linkedIndices.insert(74);
+        break;
+    case 7:
+        linkedIndices.insert(57);
+        linkedIndices.insert(58);
+        linkedIndices.insert(59);
+        linkedIndices.insert(66);
+        linkedIndices.insert(67);
+        linkedIndices.insert(68);
+        linkedIndices.insert(75);
+        linkedIndices.insert(76);
+        linkedIndices.insert(77);
+        break;
+    case 8:
+        linkedIndices.insert(60);
+        linkedIndices.insert(61);
+        linkedIndices.insert(62);
+        linkedIndices.insert(69);
+        linkedIndices.insert(70);
+        linkedIndices.insert(71);
+        linkedIndices.insert(78);
+        linkedIndices.insert(79);
+        linkedIndices.insert(80);
+        break;
+    }
+}
+
+// constructor
 Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
     _grid.resize(81);
     std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
     stringToVector(grid);
     _initialGrid = _grid;
-    bool isValidGrid = isValid();
-    bool isSolution = isValid(true);
+    setupEntities();
     setupDomains();
     mapIndexToSquare();
     domainForEach();
+    setupIndexLinkage();
 
-    for(unsigned int i = 0; i < _domainForEachIndex.size(); ++i) {
-        std::cout << i << "  " << _domainForEachIndex[i].size() << std::endl;
-    }
-
-
+    bool isValidGrid = isValid();
+    bool isSolution = isValid(true);
     std::cout <<"isValid: " << printBoolean(isValidGrid) << std::endl;
     std::cout <<"isSolution: " << printBoolean(isSolution) << std::endl;
 }
-
 Grid::~Grid(){}
+//
 
+// setup
 void Grid::stringToVector(const std::string& grid) {
     for(unsigned short i = 0; i < grid.size(); ++i) {
         _grid[i] = (unsigned short)grid[i]-48;
     }
     return;
-}
-
-bool Grid::isValid(const bool isSolutionCheck){
-    unsigned short nEntities = 0;
-    for(unsigned int i = 0; i < 9; ++i) {
-        createLine(i, _entities[i]);
-        createColumn(i, _entities[i+9]);
-        createSquare(i, _entities[i+18]);
-    }
-    for(unsigned short i = 0; i < 27; ++i) {
-        std::set<unsigned short> entity;
-        for(unsigned short j = 0; j < 9; ++j) {
-            if(isSolutionCheck && *_entities[i][j] == 0) {
-                return false;
-            }
-            std::pair<std::set<unsigned short>::iterator, bool> success =
-                entity.insert(*_entities[i][j]);
-            if(!success.second && *_entities[i][j] != 0) {
-                return false;
-            }
-        }
-    }
-    return true;
 }
 void Grid::createLine(const unsigned short index, std::vector<unsigned short*> &line){
     for(unsigned short i = 0; i < 9; ++i) {
@@ -97,28 +180,6 @@ void Grid::createSquare(const unsigned short index, std::vector<unsigned short*>
             cube[i] = &_grid[index0 + i-6 + 18];
         }
     }
-}
-bool Grid::add(const unsigned short index, const unsigned short newDigit)  {
-    if(_grid[index] == 0 && isLegit(newDigit)) {
-        _grid[index] = newDigit;
-        _latestIndexChanged = index;
-        return true;
-    }  else {
-        return false;
-    }
-}
-bool Grid::cancelPreviousChange() {
-    if (_latestIndexChanged < 81)  {
-        _grid[_latestIndexChanged] = 0;
-        return true;
-    }    else    {
-        return false;
-    }
-}
-bool Grid::resetBoard() {
-    _grid = _initialGrid;
-    _latestIndexChanged = 81;
-    return (_grid == _initialGrid);
 }
 void Grid::mapIndexToSquare() { 
     for(unsigned int i = 0; i < 81; ++i) {
@@ -167,7 +228,7 @@ void Grid::domainForEach() {
     for(unsigned short i = 0; i < 81; ++i) {
         std::vector<unsigned short> entitiesToCheck(3); // indices only
         entitiesToCheck[0] = std::floor(i / 9); // line to check
-        entitiesToCheck[1] = (i % 9 ) +9; // column to check
+        entitiesToCheck[1] = (i % 9 ); // column to check
         entitiesToCheck[2] = _indexToSquare[i]+18; // square to check
         for(unsigned short j = 0; j < 3; ++j) {
             for(unsigned short k = 0; k < 9; ++k) {
@@ -185,4 +246,99 @@ void Grid::setupDomains() {
     for(unsigned short i = 0; i < 81; ++i) {
         _domainForEachIndex[i] = options;
     }
+}
+void Grid::setupEntities() {
+    for(unsigned int i = 0; i < 9; ++i) {
+        createLine(i, _entities[i]);
+        createColumn(i, _entities[i+9]);
+        createSquare(i, _entities[i+18]);
+    }
+}
+void Grid::setupIndexLinkage() {
+    _indexLinkage.resize(81);
+    for(unsigned int i = 0; i < 81; ++i) {
+        std::set<unsigned short> linkedIndices;
+        unsigned short lineNumber = std::floor(i/9);
+        unsigned short columnNumber = (i % 9 );
+        unsigned short squareNumber = _indexToSquare[i];
+        for(unsigned short j = lineNumber*9; j < (lineNumber+1)*9; ++j ) {
+            linkedIndices.insert(j);
+        }
+        for(unsigned short j = 0, k = columnNumber; j < 9; ++j, k+=9) {
+            linkedIndices.insert(k);
+        }
+        addDigitsForSquare(squareNumber, linkedIndices);
+        _indexLinkage[i] = linkedIndices;
+    }
+    return;
+}
+// runtime
+void Grid::removeChangeFromDomains(const unsigned short index, const unsigned short digit) {
+    for(unsigned int i = 0; i < _indexLinkage[index].size(); ++i) {
+        _domainForEachIndex[i].erase(digit);
+    }
+}
+
+// operations
+bool Grid::add(const unsigned short index, const unsigned short newDigit)  {
+    if(_grid[index] == 0 && isLegit(newDigit)) {
+        _grid[index] = newDigit;
+        _latestIndexChanged = index;
+        return true;
+    }  else {
+        return false;
+    }
+}
+bool Grid::cancelPreviousChange() {
+    if (_latestIndexChanged < 81)  {
+        _grid[_latestIndexChanged] = 0;
+        return true;
+    }    else    {
+        return false;
+    }
+}
+bool Grid::resetBoard() {
+    _grid = _initialGrid;
+    _latestIndexChanged = 81;
+    return (_grid == _initialGrid);
+}
+// public:
+bool Grid::isValid(const bool isSolutionCheck){
+    for(unsigned short i = 0; i < 27; ++i) {
+        std::set<unsigned short> entity;
+        for(unsigned short j = 0; j < 9; ++j) {
+            if(isSolutionCheck && *_entities[i][j] == 0) {
+                return false;
+            }
+            std::pair<std::set<unsigned short>::iterator, bool> success =
+                entity.insert(*_entities[i][j]);
+            if(!success.second && *_entities[i][j] != 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool Grid::solve() {
+    bool jump = false;
+    while(true) {
+        for(short int i = 0; i < 81; ++i) {
+            if(_domainForEachIndex[i].size() == 1) {
+                if(add(i,*_domainForEachIndex[i].begin())){
+                    // update domainForEach
+                    removeChangeFromDomains(i, *_domainForEachIndex[i].begin());
+                    jump = true;
+                    break;
+                }
+            }
+        }
+        if(jump) {
+            jump = false;
+            continue;
+        }
+        break;
+    }
+    std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
+
+    return isValid(true);
 }

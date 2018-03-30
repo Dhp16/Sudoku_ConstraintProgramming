@@ -17,7 +17,10 @@ class Grid
     bool cancelPreviousChange();
     bool resetBoard();
 
+    bool solve();
+
   private:
+
     void stringToVector(const std::string& grid);
     void createLine(const unsigned short index, std::vector<unsigned short*>& line);
     void createColumn(const unsigned short index, std::vector<unsigned short*>& column);
@@ -25,6 +28,10 @@ class Grid
     void domainForEach();
     void mapIndexToSquare();
     void setupDomains();
+    void setupEntities();
+    void setupIndexLinkage();
+
+    void removeChangeFromDomains(const unsigned short index, const unsigned short digit);
 
     std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;
@@ -32,6 +39,7 @@ class Grid
     unsigned short _latestIndexChanged;
     std::map<unsigned short, unsigned short> _indexToSquare;
     std::vector<std::set<unsigned short>> _domainForEachIndex;
+    std::vector<std::set<unsigned short>> _indexLinkage; 
 };
 
 

@@ -121,20 +121,30 @@ void addDigitsForSquare(const unsigned short squareNumber, std::set<unsigned sho
         break;
     }
 }
-int domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
+int Grid::domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
     int counter = 0;
     int counterV2 = 0;
+    int counterV3 = 0, counterV4 = 0;
     for (unsigned int i = 0; i < domainOptions.size(); ++i)
     {
         if(domainOptions[i].empty()) {
             counterV2++;
+        }
+        if(domainOptions[i].size() == 1) {
+            counterV3++;
         }
         for (std::set<unsigned short>::iterator it = domainOptions[i].begin(); it != domainOptions[i].end();
              ++it){
             counter++;
         }
     }
-    std::cout << "0 size domains: " << counterV2 << " total size: " << counter << std::endl;
+    for(unsigned int i = 0; i < 81; ++i) {
+        if(_grid[i] == 0)
+            counterV4++;
+    }
+    
+    std::cout << "0 size domains: " << counterV2 << "  || 1 size domains: " << counterV3 << "  ||  total size: " << counter;
+    std::cout << "  ||  non-0 squares remaining: " << counterV4 << std::endl;
     return counter;
 }
 
@@ -154,6 +164,7 @@ Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short
     setupDomains();
     mapIndexToSquare();
     domainForEach();
+
     setupIndexLinkage();
 
     bool isValidGrid = isValid();
@@ -206,6 +217,23 @@ void Grid::createSquare(const unsigned short index, std::vector<unsigned short*>
         }
     }
 }
+void Grid::setupEntities() {
+    for(unsigned int i = 0; i < 9; ++i) {
+        createLine(i, _entities[i]);
+        createColumn(i, _entities[i+9]);
+        createSquare(i, _entities[i+18]);
+    }
+}
+void Grid::setupDomains() {
+    _domainForEachIndex.resize(81);
+    std::set<unsigned short> options;
+    for (unsigned short i = 1; i < 10; ++i) {
+        options.insert(i);
+    }
+    for(unsigned short i = 0; i < 81; ++i) {
+        _domainForEachIndex[i] = options;
+    }
+}
 void Grid::mapIndexToSquare() { 
     for(unsigned int i = 0; i < 81; ++i) {
         if((i % 9) < 3  ) {
@@ -250,7 +278,7 @@ void Grid::mapIndexToSquare() {
     }
 }
 void Grid::domainForEach() {
-    for(unsigned short i = 0; i < 60; ++i) {
+    for(unsigned short i = 0; i < 81; ++i) {
         if(_goldenOriginals.find(i) != _goldenOriginals.end()){
             _domainForEachIndex[i].clear();
         }
@@ -264,23 +292,6 @@ void Grid::domainForEach() {
                 _domainForEachIndex[i].erase(*_entities[entitiesToCheck[j]][k]);
             }
         }
-    }
-}
-void Grid::setupDomains() {
-    _domainForEachIndex.resize(81);
-    std::set<unsigned short> options;
-    for (unsigned short i = 0; i < 9; ++i) {
-        options.insert(i);
-    }
-    for(unsigned short i = 0; i < 81; ++i) {
-        _domainForEachIndex[i] = options;
-    }
-}
-void Grid::setupEntities() {
-    for(unsigned int i = 0; i < 9; ++i) {
-        createLine(i, _entities[i]);
-        createColumn(i, _entities[i+9]);
-        createSquare(i, _entities[i+18]);
     }
 }
 void Grid::setupIndexLinkage() {
@@ -353,17 +364,13 @@ bool Grid::solve() {
     int counter = 0;
     while(true) {
         counter++;
-        std::cout << "\niteration: " << counter << std::endl; domainTotal(_domainForEachIndex);
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){
-                    removeChangeFromDomains(i, *_domainForEachIndex[i].begin());
-                    std::cout << "domain for that index: " << _domainForEachIndex[i].size() << std::endl;
+                    //removeChangeFromDomains(i, *_domainForEachIndex[i].begin());              
+                    domainForEach();    // updates the domain for everypoint -> a different function could do it faster
                     jump = true;
                     break;
-                }
-                else {
-                    //std::cout << "Failed to add!" << std::endl;
                 }
             }
         }
@@ -373,7 +380,17 @@ bool Grid::solve() {
         }
         break;
     }
+    std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
     std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
-
+    print();
     return isValid(true);
+}
+void Grid::print() {
+    std::cout <<"Grid:" << std::endl;
+    for(unsigned int i = 0; i < 81; ++i) {
+        if(i % 9 == 0) 
+            std::cout << std::endl;
+        std::cout << _grid[i] << "   ";
+    }
+    std::cout << std::endl;
 }

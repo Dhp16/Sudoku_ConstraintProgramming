@@ -19,6 +19,7 @@ class Grid
 
     bool solve();
 
+    void print();
   private:
 
     void stringToVector(const std::string& grid);
@@ -41,6 +42,11 @@ class Grid
     std::vector<std::set<unsigned short>> _domainForEachIndex;
     std::vector<std::set<unsigned short>> _indexLinkage; 
     std::set<unsigned short> _goldenOriginals;
+  
+
+    // temp
+    int domainTotal(std::vector<std::set<unsigned short>> domainOptions);
+
 };
 
 

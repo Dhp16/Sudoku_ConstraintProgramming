@@ -2,7 +2,7 @@
 #define TESTER_H
 
 bool basicBoardMechanics() {
-    std::cout <<"------------- TESTER -------------" << std::endl;
+    std::cout <<"------------- START OF TESTER -------------" << std::endl;
     Grid grid;
     if(!grid.add(16, 5)) {
         return false;
@@ -20,6 +20,8 @@ bool basicBoardMechanics() {
     if(!grid.resetBoard()) {
         return false;
     }
+    
+    std::cout <<"-------------  END OF TESTER  -------------" << std::endl;
     return true;
 }
 

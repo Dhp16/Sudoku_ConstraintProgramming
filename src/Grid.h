@@ -3,13 +3,14 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class Grid
 {
   public:
     Grid();
     ~Grid();
-    bool isValid(const bool isSolutionCheck=false) const;
+    bool isValid(const bool isSolutionCheck=false);
 
     bool add(const unsigned short index, const unsigned short newDigit);
     bool cancelPreviousChange();
@@ -17,13 +18,17 @@ class Grid
 
   private:
     void stringToVector(const std::string& grid);
-    void createLine(const unsigned short index, std::vector<unsigned short>& line) const;
-    void createColumn(const unsigned short index, std::vector<unsigned short>& column) const;
-    void createCube(const unsigned short index, std::vector<unsigned short>& cube) const;
+    void createLine(const unsigned short index, std::vector<unsigned short*>& line);
+    void createColumn(const unsigned short index, std::vector<unsigned short*>& column);
+    void createSquare(const unsigned short index, std::vector<unsigned short*>& cube);
+    void domainForEach();
+    void mapIndexToSquare();
 
+    std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;
     std::vector<unsigned short> _initialGrid;
     unsigned short _latestIndexChanged;
+    std::map<unsigned short, unsigned short> _indexToSquare;
 };
 
 

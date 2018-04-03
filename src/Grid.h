@@ -9,7 +9,7 @@
 class Grid
 {
   public:
-    Grid();
+    Grid(std::string grid);
     ~Grid();
     bool isValid(const bool isSolutionCheck=false);
 
@@ -32,8 +32,44 @@ class Grid
     void setupEntities();
     void setupIndexLinkage();
 
-    void removeChangeFromDomains(const unsigned short index, const unsigned short digit);
+    // tools
+    void indicesForLine(const unsigned short lineId, std::set<unsigned short>& lineIndices);
+    void indicesForColumn(const unsigned short columnId, std::set<unsigned short>& columnIndices);
+    void indicesOfLineLessThoseFromSquare(const unsigned short squareId, const unsigned short lineId,
+                                                std::set<unsigned short>& indices);
+    void indicesOfColumnLessThoseFromSquare(const unsigned short squareId, const unsigned short columnId,
+                                                std::set<unsigned short>& indices);
+    unsigned short getLineId(const unsigned short squareId, const unsigned short lineNumber);
+    unsigned short getColumnId(const unsigned short squareId, const unsigned short columnId);
 
+    void updateAffectedDomains(const unsigned short index, const unsigned short digits);
+    void removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
+                        const unsigned short digitToRemove);
+    void removeExclusivesFromColumnDomains(const unsigned short squareId, const unsigned short columnId,
+                        const unsigned short digitToRemove);
+
+
+
+    // Unique Candidate
+    bool checkForSquareExclusives();
+    bool checkForLineExclusives();
+    bool checkForColumnExclusives();
+    bool exclusiveFinder(std::set<unsigned short>& indicesOfEntity);
+
+    // interaction
+    void entityInteractions();
+    void checkColumnSquareInteraction(const unsigned short squareId);
+    void checkLineSquareInteraction(const unsigned short squareId);
+
+    // Naked Subset
+    bool checkLinesForNakedSubsets();
+    bool checkColumnsForNakedSubsets();
+    bool checkSquaresForNakedSubsets();
+    bool nakedSubsetFinder(std::set<unsigned short>& entityIndices);
+    void nakedSubset(std::set<unsigned short>& entityIndices);
+    void nakedSubset();
+
+    // members:
     std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;
     std::vector<unsigned short> _initialGrid;
@@ -43,6 +79,9 @@ class Grid
     std::vector<std::set<unsigned short>> _indexLinkage; 
     std::set<unsigned short> _goldenOriginals;
   
+    // for advanced solver
+    std::vector<std::set<unsigned short>> _advancedDomains;
+
 
     // temp
     int domainTotal(std::vector<std::set<unsigned short>> domainOptions);

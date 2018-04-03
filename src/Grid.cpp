@@ -1,5 +1,6 @@
 #include "Grid.h"
 
+#include <algorithm>
 #include <iostream>
 #include <utility>
 #include <string>
@@ -144,16 +145,13 @@ int Grid::domainTotal(std::vector<std::set<unsigned short>> domainOptions) {
     }
     
     std::cout << "0 size domains: " << counterV2 << "  || 1 size domains: " << counterV3 << "  ||  total size: " << counter;
-    std::cout << "  ||  non-0 squares remaining: " << counterV4 << std::endl;
+    std::cout << "  || squares remaining: " << counterV4 << std::endl;
     return counter;
 }
 
 // constructor
-Grid::Grid(): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
+Grid::Grid(std::string grid): _latestIndexChanged(81),  _entities(27, std::vector<unsigned short*>(9)) { // after last digit
     _grid.resize(81);
-    //std::string grid ="060090305004820009070000640000035860690080054025760000016000080900043500507010090";
-    std::string grid = "700000006005000200030407090002108500300709001009204300080901050003000700100000008";
-    //std::string grid = "800000000003600000070090200050007000000045700000100030001000068008500010090000400";
     stringToVector(grid);
     _initialGrid = _grid;
     int counter = 0;
@@ -314,11 +312,370 @@ void Grid::setupIndexLinkage() {
     }
     return;
 }
-// runtime
-void Grid::removeChangeFromDomains(const unsigned short index, const unsigned short digit) {
-    for(unsigned int i = 0; i < _indexLinkage[index].size(); ++i) {
-        _domainForEachIndex[i].erase(digit);
+// tools
+
+void Grid::indicesForLine(const unsigned short lineId, std::set<unsigned short>& lineIndices)
+{
+    for(unsigned short i = lineId*9; i < lineId*9+9; ++i) {
+        lineIndices.insert(i);
     }
+}
+void Grid::indicesForColumn(const unsigned short columnId, std::set<unsigned short>& columnIndices)
+{
+    for(unsigned short i = 0, k = columnId; i < 9; ++i, k+=9) {
+        columnIndices.insert(k);
+    }
+}
+
+void Grid::indicesOfLineLessThoseFromSquare(const unsigned short squareId, const unsigned short lineId,
+                                                std::set<unsigned short>& indicesOfLine) 
+{
+    std::set<unsigned short> indicesOfSquare;
+    indicesForLine(lineId, indicesOfLine);
+    addDigitsForSquare(squareId, indicesOfSquare);
+    for(std::set<unsigned short>::iterator it = indicesOfSquare.begin(); 
+        it != indicesOfSquare.end(); ++it) {
+        indicesOfLine.erase(*it);
+    }
+}
+void Grid::indicesOfColumnLessThoseFromSquare(const unsigned short squareId, const unsigned short columnId,
+                                                std::set<unsigned short>& indicesOfColumn)
+{
+    std::set<unsigned short> indicesOfSquare;
+    indicesForColumn(columnId, indicesOfColumn);
+    addDigitsForSquare(squareId, indicesOfSquare);
+    for(std::set<unsigned short>::iterator it = indicesOfSquare.begin(); 
+        it != indicesOfSquare.end(); ++it) {
+        indicesOfColumn.erase(*it);
+    }
+}
+
+// runtime
+void Grid::updateAffectedDomains(const unsigned short index, const unsigned short digit) {
+    _domainForEachIndex[index].clear();
+    std::set<unsigned short> affectedIndices = _indexLinkage[index];
+    for(std::set<unsigned short>::iterator it = affectedIndices.begin(); 
+        it != affectedIndices.end(); ++it) {
+        _domainForEachIndex[*it].erase(digit);
+    }
+}
+void Grid::entityInteractions() {
+    _advancedDomains = _domainForEachIndex;
+    // find a restriction within a square
+
+    // as soon as you reach a square with only one option, should leave the loop
+
+    //  0 1 2 
+    //  3 4 5 
+    //  6 7 8
+    for(unsigned short i = 0; i < 9; ++i) { // once for each square
+        checkColumnSquareInteraction(i);
+        checkLineSquareInteraction(i);
+    }
+}
+unsigned short Grid::getLineId(const unsigned short squareId, const unsigned short lineNumber) 
+{
+    if(squareId < 3) {
+        return lineNumber;
+    } else if(squareId < 6) {
+        return lineNumber+3;
+    } else {
+        return lineNumber+6;
+    }
+}
+unsigned short Grid::getColumnId(const unsigned short squareId, const unsigned short columnNumber)
+{
+    if(squareId % 3 == 0) {
+        return columnNumber;
+    } else if(squareId % 3 == 1) {
+        return columnNumber + 3;
+    } else {
+        return columnNumber + 6;
+    }
+}
+
+void Grid::removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
+                        const unsigned short digitToRemove) 
+{
+    // get indices to be to take away from
+    std::set<unsigned short> indices;
+    indicesOfLineLessThoseFromSquare(squareId, lineId, indices);
+    for(std::set<unsigned short>::iterator it = indices.begin(); 
+            it != indices.end(); ++it) 
+    {
+        //_advancedDomains[*it].erase(digitToRemove);
+        _domainForEachIndex[*it].erase(digitToRemove);
+    }   
+}
+void Grid::removeExclusivesFromColumnDomains(const unsigned short squareId, const unsigned short columnId,
+                        const unsigned short digitToRemove) 
+{
+    // get indices to be to take away from
+    std::set<unsigned short> indices;
+    indicesOfColumnLessThoseFromSquare(squareId, columnId, indices);
+    for(std::set<unsigned short>::iterator it = indices.begin(); 
+            it != indices.end(); ++it) 
+    {
+        //_advancedDomains[*it].erase(digitToRemove);
+        _domainForEachIndex[*it].erase(digitToRemove);
+    }   
+}
+bool Grid::checkForLineExclusives() {
+    bool foundOne = false;
+    for(unsigned int lineId = 0; lineId < 9; lineId++) {
+        std::set<unsigned short> indicesOfThisLine;
+        indicesForLine(lineId, indicesOfThisLine);
+        if(!foundOne) {
+            foundOne = exclusiveFinder(indicesOfThisLine);
+        } else {
+            exclusiveFinder(indicesOfThisLine);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkForColumnExclusives() {
+    bool foundOne = false;
+    for(unsigned int columnId = 0; columnId < 9; columnId++) {
+        std::set<unsigned short> indicesOfThisColumn;
+        indicesForColumn(columnId, indicesOfThisColumn);
+        if(!foundOne) {
+            foundOne = exclusiveFinder(indicesOfThisColumn);
+        } else {
+            exclusiveFinder(indicesOfThisColumn);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkForSquareExclusives(){
+    bool foundOne = false;
+    for(unsigned short squareId = 0; squareId < 9; ++squareId) {
+        std::set<unsigned short> indicesForThisSquare;
+        addDigitsForSquare(squareId, indicesForThisSquare);
+        if(!foundOne) {
+            foundOne = exclusiveFinder(indicesForThisSquare);
+        } else {
+            exclusiveFinder(indicesForThisSquare);
+        }
+    }
+    return foundOne;
+}
+bool Grid::exclusiveFinder(std::set<unsigned short>& indicesOfEntity){
+    bool foundOne = false;
+    std::vector<std::set<unsigned short>> domainsForEachIndex(9);
+    unsigned short index = 0;
+    for(std::set<unsigned short>::iterator it = indicesOfEntity.begin();
+        it != indicesOfEntity.end(); ++it) {
+        domainsForEachIndex[index] = _domainForEachIndex[*it];
+        index++;
+    }
+    for(unsigned short i = 0; i < domainsForEachIndex.size(); ++i){
+        for(std::set<unsigned short>::iterator it = domainsForEachIndex[i].begin();
+            it != domainsForEachIndex[i].end(); ++it) {
+            bool exclusive = true;
+            for(unsigned short j = 0; j < domainsForEachIndex.size(); ++j) {
+                if(i!= j) {
+                    if(std::find(domainsForEachIndex[j].begin(), domainsForEachIndex[j].end(),
+                        *it) != domainsForEachIndex[j].end()) {
+                        exclusive =  false;
+                        break;
+                    }
+                }
+            }
+            if(exclusive) {
+                unsigned short index = *std::next(indicesOfEntity.begin(), i); // work it out from square 
+                _grid[index] = *it;
+                updateAffectedDomains(index, *it);
+                foundOne = true;
+                break;
+            }
+        }
+    }
+    return foundOne;
+}
+void Grid::checkLineSquareInteraction(const unsigned short squareId){
+    std::set<unsigned short> indicesForThisSquare;
+    addDigitsForSquare(squareId, indicesForThisSquare);
+    std::vector<std::vector<unsigned short>> domainsForLines(3);
+    int counter = 0;
+    int index = 0;
+    for(std::set<unsigned short>::iterator it = indicesForThisSquare.begin();
+        it != indicesForThisSquare.end(); ++it) {
+        counter++;
+        for(std::set<unsigned short>::iterator it2 = _advancedDomains[*it].begin();
+            it2 != _advancedDomains[*it].end(); ++it2) {
+            domainsForLines[index].push_back(*it2);
+        }
+        if(counter % 3 == 0) {
+            index++;
+        }
+    }
+    for(unsigned short i = 0; i < domainsForLines.size(); ++i) {
+        int exclusiveDomain = -1;
+        for(unsigned short j = 0; j < domainsForLines[i].size(); ++j) {
+            bool exclusive = true;
+            for(unsigned short k = 0; k < 3; ++k) {
+                if(k != i) {
+                    unsigned short domain = domainsForLines[i][j];
+                    if(std::find(domainsForLines[k].begin(), 
+                        domainsForLines[k].end(), 
+                        domain) != domainsForLines[k].end()) {
+                        exclusive = false;
+                        continue;
+                    }
+                }
+            }
+            if(exclusive) {
+                unsigned short lineId = getLineId(squareId, i);
+                removeExclusivesFromLinesDomains(squareId, lineId, domainsForLines[i][j]);
+            }
+        }
+    }
+}
+void Grid::checkColumnSquareInteraction(const unsigned short squareId){
+    std::set<unsigned short> indicesForThisSquare;
+    addDigitsForSquare(squareId, indicesForThisSquare);
+    std::vector<std::vector<unsigned short>> domainsForColumns(3);
+    int counter = 0;
+    for(std::set<unsigned short>::iterator it = indicesForThisSquare.begin();
+        it != indicesForThisSquare.end(); ++it) {
+        for(std::set<unsigned short>::iterator it2 = _advancedDomains[*it].begin();
+            it2 != _advancedDomains[*it].end(); ++it2) {
+            if(counter % 3 == 0) {
+                domainsForColumns[0].push_back(*it2);
+            } else if (counter % 3 == 1) {
+                domainsForColumns[1].push_back(*it2);
+            } else {
+                domainsForColumns[2].push_back(*it2);
+            }
+        }
+        counter++;
+    }
+    for(unsigned short i = 0; i < domainsForColumns.size(); ++i) {
+        int exclusiveDomain = -1;
+        for(unsigned short j = 0; j < domainsForColumns[i].size(); ++j) {
+            bool exclusive = true;
+            for(unsigned short k = 0; k < 3; ++k) {
+                if(k != i) {
+                    unsigned short domain = domainsForColumns[i][j];
+                    if(std::find(domainsForColumns[k].begin(), 
+                        domainsForColumns[k].end(), 
+                        domain) != domainsForColumns[k].end()) {
+                        exclusive = false;
+                        continue;
+                    }
+                }
+            }
+            if(exclusive) {
+                unsigned short columnId = getColumnId(squareId, i);
+                removeExclusivesFromColumnDomains(squareId, columnId, domainsForColumns[i][j]);
+            }
+        }
+    }
+}
+
+// tools for naked subset
+void getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
+    std::vector<std::vector<std::pair<double,double>>>& pairsForEachIndex) 
+{
+    pairsForEachIndex.resize(domainsForEachIndex.size());
+    for(unsigned int i = 0; i < domainsForEachIndex.size(); ++i) {
+        for(std::set<unsigned short>::iterator it = domainsForEachIndex[i].begin();
+            it != domainsForEachIndex[i].end(); ++it) {
+                for(std::set<unsigned short>::iterator it2 = domainsForEachIndex[i].begin();
+                    it2 != domainsForEachIndex[i].end(); ++it2) {
+                        if(it != it2) {
+                            pairsForEachIndex[i].push_back(std::pair<double,double>(*it, *it2));
+                        }
+                    }
+            }
+    }
+}
+
+// Naked Subset
+bool Grid::checkLinesForNakedSubsets() {
+    bool foundOne = false;
+    for(unsigned int lineId = 0; lineId < 9; lineId++) {
+        std::set<unsigned short> indicesOfThisLine;
+        indicesForLine(lineId, indicesOfThisLine);
+        if(!foundOne) {
+            foundOne = nakedSubsetFinder(indicesOfThisLine);
+        } else {
+            nakedSubsetFinder(indicesOfThisLine);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkColumnsForNakedSubsets() {
+    bool foundOne = false;
+    for(unsigned int columnId = 0; columnId < 9; columnId++) {
+        std::set<unsigned short> indicesOfThisColumn;
+        indicesForColumn(columnId, indicesOfThisColumn);
+        if(!foundOne) {
+            foundOne = nakedSubsetFinder(indicesOfThisColumn);
+        } else {
+            nakedSubsetFinder(indicesOfThisColumn);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkSquaresForNakedSubsets() {
+    bool foundOne = false;
+    for(unsigned short squareId = 0; squareId < 9; ++squareId) {
+        std::set<unsigned short> indicesForThisSquare;
+        addDigitsForSquare(squareId, indicesForThisSquare);
+        if(!foundOne) {
+            foundOne = exclusiveFinder(indicesForThisSquare);
+        } else {
+            exclusiveFinder(indicesForThisSquare);
+        }
+    }
+    return foundOne;
+}
+bool Grid::nakedSubsetFinder(std::set<unsigned short>& entityIndices) {
+    bool foundOne = false;
+    std::vector<std::set<unsigned short>> domainsForEachIndex(9);
+    unsigned short index = 0;
+    for(std::set<unsigned short>::iterator it = entityIndices.begin();
+        it != entityIndices.end(); ++it) {
+        domainsForEachIndex[index] = _domainForEachIndex[*it];
+        index++;
+    }
+    // create all possible pairs from the domainsForEachIndex
+    std::vector<std::vector<std::pair<double,double>>> pairsForEachIndex;
+    getPairsForEachIndex(domainsForEachIndex, pairsForEachIndex);
+
+    for(unsigned short i = 0; i < domainsForEachIndex.size(); ++i){
+        // check pairs 
+
+        for(std::set<unsigned short>::iterator it = domainsForEachIndex[i].begin();
+            it != domainsForEachIndex[i].end(); ++it) {
+            bool exclusive = true;
+            for(unsigned short j = 0; j < domainsForEachIndex.size(); ++j) {
+                if(i!= j) {
+                    if(std::find(domainsForEachIndex[j].begin(), domainsForEachIndex[j].end(),
+                        *it) != domainsForEachIndex[j].end()) {
+                        exclusive =  false;
+                        break;
+                    }
+                }
+            }
+            if(exclusive) {
+                unsigned short index = *std::next(entityIndices.begin(), i); // work it out from square 
+                _grid[index] = *it;
+                updateAffectedDomains(index, *it);
+                foundOne = true;
+                break;
+            }
+        }
+    }
+    return foundOne;
+}
+
+void Grid::nakedSubset() {
+    // different for each entitt again
+    checkLinesForNakedSubsets();
+    checkColumnsForNakedSubsets();
+    checkSquaresForNakedSubsets();
 }
 
 // operations
@@ -366,12 +723,42 @@ bool Grid::solve() {
     int counter = 0;
     while(true) {
         counter++;
-        domainTotal(_domainForEachIndex);
+        //Sole candidate
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){
-                    //removeChangeFromDomains(i, *_domainForEachIndex[i].begin());              
-                    domainForEach();    // updates the domain for everypoint -> a different function could do it faster
+                    updateAffectedDomains(i, *_domainForEachIndex[i].begin());              
+                    jump = true;
+                    break;
+                }
+            }
+        }
+        if(jump) {
+            jump = false;
+            continue;
+        }
+        if(isValid(true)) {
+            break;
+        }
+        // Unique candidate Square
+        if(checkForSquareExclusives()) {
+            continue;
+        }
+        // Unique candidate Column
+        if(checkForLineExclusives()) {
+            continue;
+        }
+        // Unique candidate Line
+        if(checkForColumnExclusives()) {
+            continue;
+        }
+
+        entityInteractions();
+        // Sole candidate leveraging entity interaction
+        for(short int i = 0; i < 81; ++i) {
+            if(_advancedDomains[i].size() == 1) {
+                if(add(i,*_advancedDomains[i].begin())){
+                    updateAffectedDomains(i, *_advancedDomains[i].begin());        
                     jump = true;
                     break;
                 }
@@ -383,9 +770,18 @@ bool Grid::solve() {
         }
         break;
     }
+    domainTotal(_domainForEachIndex);
     std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
     std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
     print();
+
+    // std::cout << "Domain for index " << 16 << std::endl;
+    // for(std::set<unsigned short>::iterator it = _domainForEachIndex[16].begin();
+    //             it != _domainForEachIndex[16].end(); ++it) {
+    //     std::cout << *it << "  ";
+    // }
+    std::cout << std::endl;
+
     return isValid(true);
 }
 void Grid::print() {
@@ -393,7 +789,11 @@ void Grid::print() {
     for(unsigned int i = 0; i < 81; ++i) {
         if(i % 9 == 0) 
             std::cout << std::endl;
-        std::cout << _grid[i] << "   ";
+        if(_grid[i] != 0) {
+            std::cout << _grid[i] << "   ";
+        } else {
+            std::cout << "_   ";
+        }
     }
     std::cout << std::endl;
 }

@@ -61,13 +61,18 @@ class Grid
     void checkColumnSquareInteraction(const unsigned short squareId);
     void checkLineSquareInteraction(const unsigned short squareId);
 
+    // tools for naked subset
+    void getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
+    std::vector<std::vector<std::pair<short,short>>>& pairsForEachIndex);
+    bool checkItsWorthInvestigating(const std::vector<std::set<unsigned short>>& domainsForEachIndex);
+
     // Naked Subset
     bool checkLinesForNakedSubsets();
     bool checkColumnsForNakedSubsets();
     bool checkSquaresForNakedSubsets();
     bool nakedSubsetFinder(std::set<unsigned short>& entityIndices);
     void nakedSubset(std::set<unsigned short>& entityIndices);
-    void nakedSubset();
+    bool nakedSubset();
 
     // members:
     std::vector<std::vector<unsigned short*>> _entities;

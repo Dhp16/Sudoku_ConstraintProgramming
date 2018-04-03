@@ -574,8 +574,8 @@ void Grid::checkColumnSquareInteraction(const unsigned short squareId){
 }
 
 // tools for naked subset
-void getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
-    std::vector<std::vector<std::pair<double,double>>>& pairsForEachIndex) 
+void Grid::getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
+    std::vector<std::vector<std::pair<short,short>>>& pairsForEachIndex) 
 {
     pairsForEachIndex.resize(domainsForEachIndex.size());
     for(unsigned int i = 0; i < domainsForEachIndex.size(); ++i) {
@@ -589,6 +589,18 @@ void getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachI
                     }
             }
     }
+}
+bool Grid::checkItsWorthInvestigating(const std::vector<std::set<unsigned short>>& domainsForEachIndex) {
+    unsigned short counter = 0;
+    for(unsigned short i = 0; i < domainsForEachIndex.size(); ++i) {
+        if(domainsForEachIndex.size() > 2) {
+            counter++;
+        }
+        if(counter > 2) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Naked Subset
@@ -640,42 +652,52 @@ bool Grid::nakedSubsetFinder(std::set<unsigned short>& entityIndices) {
         domainsForEachIndex[index] = _domainForEachIndex[*it];
         index++;
     }
+    // check that there are more than two spaces not completed
+    if(!checkItsWorthInvestigating(domainsForEachIndex))
+    {
+        return false;
+    }
+
     // create all possible pairs from the domainsForEachIndex
-    std::vector<std::vector<std::pair<double,double>>> pairsForEachIndex;
+    std::vector<std::vector<std::pair<short,short>>> pairsForEachIndex;
     getPairsForEachIndex(domainsForEachIndex, pairsForEachIndex);
-
-    for(unsigned short i = 0; i < domainsForEachIndex.size(); ++i){
-        // check pairs 
-
-        for(std::set<unsigned short>::iterator it = domainsForEachIndex[i].begin();
-            it != domainsForEachIndex[i].end(); ++it) {
-            bool exclusive = true;
-            for(unsigned short j = 0; j < domainsForEachIndex.size(); ++j) {
-                if(i!= j) {
-                    if(std::find(domainsForEachIndex[j].begin(), domainsForEachIndex[j].end(),
-                        *it) != domainsForEachIndex[j].end()) {
-                        exclusive =  false;
-                        break;
+    for(unsigned int i = 0; i < pairsForEachIndex.size(); ++i) {
+        std::vector<short> pairPresentIndices;
+        if(pairsForEachIndex[i].size() == 1){
+            pairPresentIndices.push_back(i);
+            for(unsigned int j = 0; j < pairsForEachIndex.size(); ++j) {
+                if(i!=j) {
+                    if(pairsForEachIndex[j].size() == 1) {
+                        if(pairsForEachIndex[i][0] == pairsForEachIndex[j][0]) {
+                            pairPresentIndices.push_back(j);
+                            foundOne = true;
+                        }
                     }
                 }
             }
-            if(exclusive) {
-                unsigned short index = *std::next(entityIndices.begin(), i); // work it out from square 
-                _grid[index] = *it;
-                updateAffectedDomains(index, *it);
-                foundOne = true;
-                break;
+            if(foundOne) {
+                for(std::set<unsigned short>::iterator it = entityIndices.begin(); 
+                    it != entityIndices.end(); ++it) {
+                    if(std::find(pairPresentIndices.begin(), pairPresentIndices.end(), *it) == pairPresentIndices.end()) {
+                        _domainForEachIndex[*it].erase(pairsForEachIndex[i][0].first);
+                        _domainForEachIndex[*it].erase(pairsForEachIndex[i][0].second);
+                    }
+                }
+            return true;
             }
         }
     }
-    return foundOne;
+    return false;
 }
 
-void Grid::nakedSubset() {
+bool Grid::nakedSubset() {
     // different for each entitt again
-    checkLinesForNakedSubsets();
-    checkColumnsForNakedSubsets();
-    checkSquaresForNakedSubsets();
+    if(checkLinesForNakedSubsets() ||
+    checkColumnsForNakedSubsets() ||
+    checkSquaresForNakedSubsets()) {
+        return true;
+    }
+    return false;
 }
 
 // operations
@@ -750,6 +772,12 @@ bool Grid::solve() {
         }
         // Unique candidate Line
         if(checkForColumnExclusives()) {
+            continue;
+        }
+        
+        // Naked Subset
+        if(nakedSubset()) {
+            std::cout << "NAKED SUBSET SUCCESS" << std::endl;
             continue;
         }
 

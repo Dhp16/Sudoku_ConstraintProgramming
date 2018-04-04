@@ -583,8 +583,9 @@ void Grid::getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsFo
             it != domainsForEachIndex[i].end(); ++it) {
                 for(std::set<unsigned short>::iterator it2 = domainsForEachIndex[i].begin();
                     it2 != domainsForEachIndex[i].end(); ++it2) {
-                        if(it != it2) {
-                            pairsForEachIndex[i].push_back(std::pair<double,double>(*it, *it2));
+                        if(it != it2 && std::find(pairsForEachIndex[i].begin(), 
+                        pairsForEachIndex[i].end(), std::pair<short,short>(*it2, *it))== pairsForEachIndex[i].end()) {
+                            pairsForEachIndex[i].push_back(std::pair<short,short>(*it, *it2));
                         }
                     }
             }
@@ -601,6 +602,13 @@ bool Grid::checkItsWorthInvestigating(const std::vector<std::set<unsigned short>
         }
     }
     return false;
+}
+void Grid::convertPairPresentIndices(const std::set<unsigned short>& entityIndices, 
+std::vector<short>& pairPresentIndices)
+{
+    for(unsigned int i = 0; i < pairPresentIndices.size(); ++i) {
+        pairPresentIndices[i] = *std::next(entityIndices.begin(), pairPresentIndices[i]);
+    }
 }
 
 // Naked Subset
@@ -676,6 +684,7 @@ bool Grid::nakedSubsetFinder(std::set<unsigned short>& entityIndices) {
                 }
             }
             if(foundOne) {
+                convertPairPresentIndices(entityIndices, pairPresentIndices);
                 for(std::set<unsigned short>::iterator it = entityIndices.begin(); 
                     it != entityIndices.end(); ++it) {
                     if(std::find(pairPresentIndices.begin(), pairPresentIndices.end(), *it) == pairPresentIndices.end()) {
@@ -689,17 +698,18 @@ bool Grid::nakedSubsetFinder(std::set<unsigned short>& entityIndices) {
     }
     return false;
 }
-
 bool Grid::nakedSubset() {
     // different for each entitt again
-    if(checkLinesForNakedSubsets() ||
-    checkColumnsForNakedSubsets() ||
-    checkSquaresForNakedSubsets()) {
+    if(checkLinesForNakedSubsets() 
+    || 
+    checkColumnsForNakedSubsets() 
+    ||
+    checkSquaresForNakedSubsets()
+    ) {
         return true;
     }
     return false;
 }
-
 // operations
 bool Grid::add(const unsigned short index, const unsigned short newDigit)  {
     if(_grid[index] == 0 && isLegit(newDigit)) {
@@ -745,6 +755,9 @@ bool Grid::solve() {
     int counter = 0;
     while(true) {
         counter++;
+        // Naked Subset
+        nakedSubset();
+
         //Sole candidate
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
@@ -762,25 +775,19 @@ bool Grid::solve() {
         if(isValid(true)) {
             break;
         }
-        // Unique candidate Square
+        //Unique candidate Square
         if(checkForSquareExclusives()) {
             continue;
         }
         // Unique candidate Column
         if(checkForLineExclusives()) {
-            continue;
+           continue;
         }
         // Unique candidate Line
         if(checkForColumnExclusives()) {
             continue;
-        }
-        
-        // Naked Subset
-        if(nakedSubset()) {
-            std::cout << "NAKED SUBSET SUCCESS" << std::endl;
-            continue;
-        }
-
+        }        
+    
         entityInteractions();
         // Sole candidate leveraging entity interaction
         for(short int i = 0; i < 81; ++i) {
@@ -798,16 +805,17 @@ bool Grid::solve() {
         }
         break;
     }
+    std::cout <<"\n------------- End of solver -------------" << std::endl;
     domainTotal(_domainForEachIndex);
     std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
     std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
     print();
 
-    // std::cout << "Domain for index " << 16 << std::endl;
-    // for(std::set<unsigned short>::iterator it = _domainForEachIndex[16].begin();
-    //             it != _domainForEachIndex[16].end(); ++it) {
-    //     std::cout << *it << "  ";
-    // }
+    std::cout << "Domain for index " << 0 << std::endl;
+    for(std::set<unsigned short>::iterator it = _domainForEachIndex[0].begin();
+                it != _domainForEachIndex[0].end(); ++it) {
+        std::cout << *it << "  ";
+    }
     std::cout << std::endl;
 
     return isValid(true);
@@ -815,7 +823,7 @@ bool Grid::solve() {
 void Grid::print() {
     std::cout <<"Grid:" << std::endl;
     for(unsigned int i = 0; i < 81; ++i) {
-        if(i % 9 == 0) 
+        if(i % 9 == 0 && i != 0) 
             std::cout << std::endl;
         if(_grid[i] != 0) {
             std::cout << _grid[i] << "   ";

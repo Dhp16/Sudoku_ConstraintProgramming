@@ -27,6 +27,9 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
             case 4:
                 fileName = "test2";
                 break;
+            case 5:
+                fileName = "NakedSubsetTester";
+                break;
         }
         testcases[i].first = fileName;
         std::string folder = std::string("testcases//");
@@ -39,6 +42,33 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
         testcases[i].second = inputGrid;
     }
     return testcases;
+}
+std::vector<std::pair<std::string, std::string>> development() {
+    std::vector<std::pair<std::string, std::string>> testcases(3);
+    for(unsigned int i = 0; i < 3; ++i) {
+        std::string fileName;
+        switch(i) {
+            case 0:
+                fileName = "test";
+                break;
+            case 1:
+                fileName = "test2";
+                break;
+            case 2:
+                fileName = "NakedSubsetTester2";
+                break;
+        }
+        testcases[i].first = fileName;
+        std::string folder = std::string("testcases//");
+        std::string extention =  std::string(".txt");
+        fileName = folder + fileName + extention;
+        std::fstream reader;
+        reader.open(fileName);
+        std::string inputGrid;
+        reader >> inputGrid;
+        testcases[i].second = inputGrid;
+    }
+    return testcases; 
 }
 
 bool basicBoardMechanics(std::string testcase) {
@@ -74,6 +104,7 @@ bool tester() {
     std::cout <<"------------- START OF TESTER -------------" << std::endl;
 
     std::vector<std::pair<std::string,std::string>> testcases;
+    // testcases = development();
     testcases = readTestcases();
     bool isSuccess = true;
 

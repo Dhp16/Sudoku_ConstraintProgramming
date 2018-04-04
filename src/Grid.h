@@ -48,8 +48,6 @@ class Grid
     void removeExclusivesFromColumnDomains(const unsigned short squareId, const unsigned short columnId,
                         const unsigned short digitToRemove);
 
-
-
     // Unique Candidate
     bool checkForSquareExclusives();
     bool checkForLineExclusives();
@@ -65,6 +63,7 @@ class Grid
     void getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
     std::vector<std::vector<std::pair<short,short>>>& pairsForEachIndex);
     bool checkItsWorthInvestigating(const std::vector<std::set<unsigned short>>& domainsForEachIndex);
+    void convertPairPresentIndices(const std::set<unsigned short>& entityIndices, std::vector<short>& pairPresentIndices);
 
     // Naked Subset
     bool checkLinesForNakedSubsets();

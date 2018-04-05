@@ -73,6 +73,19 @@ class Grid
     void nakedSubset(std::set<unsigned short>& entityIndices);
     bool nakedSubset();
 
+    // tools for Naked Subset
+    short occurencesInOf(const std::vector<std::set<unsigned short>>& domainsForEachIndex, 
+    const unsigned short digit);
+    void deleteAllExcept(const unsigned short index, const unsigned short digit1, 
+    const unsigned short digit2);
+
+    // Hidden Subset
+    bool checkLinesForHiddenSubsets();
+    bool checkColumnsForHiddenSubsets();
+    bool checkSquaresForHiddenSubsets();
+    bool hiddenSubsetFinder(std::set<unsigned short>& entityIndices);
+    bool hiddenSubset();
+    
     // members:
     std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;

@@ -710,6 +710,137 @@ bool Grid::nakedSubset() {
     }
     return false;
 }
+
+// tools for hidden subset
+short Grid::occurencesInOf(const std::vector<std::set<unsigned short>>& domainsForEachIndex, 
+    const unsigned short digit)
+{
+    short occurences = 0;
+    for(unsigned int i = 0; i < domainsForEachIndex.size(); ++i) {
+        for(std::set<unsigned short>::const_iterator it = domainsForEachIndex[i].begin();
+            it != domainsForEachIndex[i].end(); ++it) {
+                if(*it == digit) {
+                    occurences++;
+                }
+            }
+    }
+    return occurences;
+}
+void Grid::deleteAllExcept(const unsigned short index, const unsigned short digit1, const unsigned short digit2)
+{
+    for(std::set<unsigned short>::iterator it = _domainForEachIndex[index].begin(); 
+        it != _domainForEachIndex[index].end(); ++it) {
+            if(*it != digit1 && *it != digit2) {
+                _domainForEachIndex[index].erase(*it);
+                std::cout <<" deleting " << std::endl;
+            }
+        }
+}
+
+// Hidden Subset
+bool Grid::checkLinesForHiddenSubsets() {
+    bool foundOne = false;
+    for(unsigned int lineId = 0; lineId < 9; lineId++) {
+        std::set<unsigned short> indicesOfThisLine;
+        indicesForLine(lineId, indicesOfThisLine);
+        if(!foundOne) {
+            foundOne = hiddenSubsetFinder(indicesOfThisLine);
+        } else {
+            hiddenSubsetFinder(indicesOfThisLine);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkColumnsForHiddenSubsets() {
+    bool foundOne = false;
+    for(unsigned int columnId = 0; columnId < 9; columnId++) {
+        std::set<unsigned short> indicesOfThisColumn;
+        indicesForColumn(columnId, indicesOfThisColumn);
+        if(!foundOne) {
+            foundOne = hiddenSubsetFinder(indicesOfThisColumn);
+        } else {
+            hiddenSubsetFinder(indicesOfThisColumn);
+        }
+    }
+    return foundOne;
+}
+bool Grid::checkSquaresForHiddenSubsets() {
+    bool foundOne = false;
+    for(unsigned short squareId = 0; squareId < 9; ++squareId) {
+        std::set<unsigned short> indicesForThisSquare;
+        addDigitsForSquare(squareId, indicesForThisSquare);
+        if(!foundOne) {
+            foundOne = hiddenSubsetFinder(indicesForThisSquare);
+        } else {
+            hiddenSubsetFinder(indicesForThisSquare);
+        }
+    }
+    return foundOne;
+}
+bool Grid::hiddenSubsetFinder(std::set<unsigned short>& entityIndices) {
+    bool foundOne = false;
+    std::vector<std::set<unsigned short>> domainsForEachIndex(9);
+    unsigned short index = 0;
+    for(std::set<unsigned short>::iterator it = entityIndices.begin();
+        it != entityIndices.end(); ++it) {
+        domainsForEachIndex[index] = _domainForEachIndex[*it];
+        index++;
+    }
+    // check that there are more than two spaces not completed
+    if(!checkItsWorthInvestigating(domainsForEachIndex))
+    {
+        return false;
+    }
+
+    // create all possible pairs from the domainsForEachIndex
+    std::vector<std::vector<std::pair<short,short>>> pairsForEachIndex;
+    getPairsForEachIndex(domainsForEachIndex, pairsForEachIndex);
+
+    for(unsigned int i = 0; i < pairsForEachIndex.size(); ++i) {
+        for(unsigned int j = 0; j < pairsForEachIndex[i].size(); ++j) {
+            std::vector<short> pairIndices;
+            pairIndices.push_back(i);
+            for(unsigned int k = 0; k < pairsForEachIndex.size(); ++k) {
+                if(k==i) {
+                    continue;
+                }
+                for(unsigned int l = 0; l < pairsForEachIndex[k].size(); ++l) {
+                    if(pairsForEachIndex[i][j] == pairsForEachIndex[k][l]) {
+                        pairIndices.push_back(k);
+                    }
+                }
+            }
+            if(pairIndices.size() == 2) {   // found an exclusive subset
+                // check the indices don't appear in other squares alone
+                short digit1 = pairsForEachIndex[i][j].first;
+                short digit2 = pairsForEachIndex[i][j].second;
+                if (occurencesInOf(domainsForEachIndex, digit1) == 2 && occurencesInOf(domainsForEachIndex, digit2) == 2)
+                {
+                    // delete all occurences that are not digit1 or digit2 from pairsForEachIndex tomorrow morning
+                    convertPairPresentIndices(entityIndices, pairIndices);
+                    deleteAllExcept(pairIndices[0], digit1, digit2);
+                    deleteAllExcept(pairIndices[1], digit1, digit2);
+                    foundOne = true;
+                }      
+            }   
+        }
+    }
+    return foundOne;   
+}
+bool Grid::hiddenSubset() {
+    if(
+    checkLinesForHiddenSubsets()
+    ||
+    checkColumnsForHiddenSubsets()
+    ||
+    checkSquaresForHiddenSubsets()
+    ) {
+        return true;
+    }
+    return false;
+}
+
+
 // operations
 bool Grid::add(const unsigned short index, const unsigned short newDigit)  {
     if(_grid[index] == 0 && isLegit(newDigit)) {
@@ -755,10 +886,13 @@ bool Grid::solve() {
     int counter = 0;
     while(true) {
         counter++;
-        // Naked Subset
+        // // Naked Subset
         nakedSubset();
 
-        //Sole candidate
+        // Hidden Subset
+        hiddenSubset(); // very similar except that the subset may appear among others
+        
+        // Sole candidate
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){
@@ -791,9 +925,9 @@ bool Grid::solve() {
         entityInteractions();
         // Sole candidate leveraging entity interaction
         for(short int i = 0; i < 81; ++i) {
-            if(_advancedDomains[i].size() == 1) {
-                if(add(i,*_advancedDomains[i].begin())){
-                    updateAffectedDomains(i, *_advancedDomains[i].begin());        
+            if(_domainForEachIndex[i].size() == 1) {
+                if(add(i,*_domainForEachIndex[i].begin())){
+                    updateAffectedDomains(i, *_domainForEachIndex[i].begin());        
                     jump = true;
                     break;
                 }
@@ -803,19 +937,22 @@ bool Grid::solve() {
             jump = false;
             continue;
         }
+        
         break;
     }
     std::cout <<"\n------------- End of solver -------------" << std::endl;
+
+    std::cout <<" Domain of " << 12 << std::endl;
+    for(std::set<unsigned short>::iterator it = _domainForEachIndex[12].begin(); it!= 
+        _domainForEachIndex[12].end(); ++it) {
+            std::cout << *it << " ";
+        }
+
     domainTotal(_domainForEachIndex);
     std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
     std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
     print();
 
-    std::cout << "Domain for index " << 0 << std::endl;
-    for(std::set<unsigned short>::iterator it = _domainForEachIndex[0].begin();
-                it != _domainForEachIndex[0].end(); ++it) {
-        std::cout << *it << "  ";
-    }
     std::cout << std::endl;
 
     return isValid(true);
@@ -833,3 +970,17 @@ void Grid::print() {
     }
     std::cout << std::endl;
 }
+
+
+
+
+
+
+
+    // for(unsigned int i = 0; i < pairsForEachIndex.size(); ++i) {
+    //     std::cout << "i: " << i << "   ";
+    //     for(unsigned int j = 0; j < pairsForEachIndex[i].size(); ++j) {
+    //         std::cout << "[ "<< pairsForEachIndex[i][j].first << " ; " << pairsForEachIndex[i][j].second << " ], ";  
+    //     }
+    //     std::cout << "\n";
+    // }

@@ -41,6 +41,8 @@ class Grid
                                                 std::set<unsigned short>& indices);
     unsigned short getLineId(const unsigned short squareId, const unsigned short lineNumber);
     unsigned short getColumnId(const unsigned short squareId, const unsigned short columnId);
+    unsigned short whichLineAmIIn(const unsigned short index);
+    unsigned short whichColumnsAmIIn(const unsigned short index);
 
     void updateAffectedDomains(const unsigned short index, const unsigned short digits);
     void removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
@@ -85,6 +87,11 @@ class Grid
     bool checkSquaresForHiddenSubsets();
     bool hiddenSubsetFinder(std::set<unsigned short>& entityIndices);
     bool hiddenSubset();
+
+    // Tools for XWing
+    std::vector<short> occurencesOfADigitInAnEntity(const short digit, const std::set<unsigned short>& entityIndices);
+    //
+    bool xWing(); 
     
     // members:
     std::vector<std::vector<unsigned short*>> _entities;

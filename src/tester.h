@@ -21,15 +21,6 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
             case 2:
                 fileName = "impossible";
                 break;
-            case 3:
-                fileName = "test";
-                break;
-            case 4:
-                fileName = "test2";
-                break;
-            case 5:
-                fileName = "NakedSubsetTester";
-                break;
         }
         testcases[i].first = fileName;
         std::string folder = std::string("testcases//");
@@ -44,8 +35,8 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
     return testcases;
 }
 std::vector<std::pair<std::string, std::string>> development() {
-    std::vector<std::pair<std::string, std::string>> testcases(4);
-    for(unsigned int i = 0; i < 4; ++i) {
+    std::vector<std::pair<std::string, std::string>> testcases(5);
+    for(unsigned int i = 0; i < 5; ++i) {
         std::string fileName;
         switch(i) {
             case 0:
@@ -59,6 +50,9 @@ std::vector<std::pair<std::string, std::string>> development() {
                 break;
             case 3:
                 fileName = "HiddenSubsetTester";
+                break;
+            case 4:
+                fileName = "XWing";
                 break;
         }
         testcases[i].first = fileName;

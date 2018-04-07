@@ -393,6 +393,12 @@ unsigned short Grid::getColumnId(const unsigned short squareId, const unsigned s
         return columnNumber + 6;
     }
 }
+unsigned short Grid::whichLineAmIIn(const unsigned short index){
+    return index/9;
+}
+unsigned short Grid::whichColumnsAmIIn(const unsigned short index){
+    return index%9;
+}
 
 void Grid::removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
                         const unsigned short digitToRemove) 
@@ -732,7 +738,6 @@ void Grid::deleteAllExcept(const unsigned short index, const unsigned short digi
         it != _domainForEachIndex[index].end(); ++it) {
             if(*it != digit1 && *it != digit2) {
                 _domainForEachIndex[index].erase(*it);
-                std::cout <<" deleting " << std::endl;
             }
         }
 }
@@ -840,6 +845,105 @@ bool Grid::hiddenSubset() {
     return false;
 }
 
+// X-Wing tools
+std::vector<short> Grid::occurencesOfADigitInAnEntity(const short digit, const std::set<unsigned short>& entityIndices) {
+    std::vector<short> indices;
+    short position = 0;
+    for(std::set<unsigned short>::const_iterator it = entityIndices.begin(); 
+    it!= entityIndices.end(); ++it) {
+        for(std::set<unsigned short>::const_iterator it2 = _domainForEachIndex[*it].begin();
+        it2!= _domainForEachIndex[*it].end(); ++it2) {
+            if(*it2 == digit) {
+                indices.push_back(position);
+            }
+        }
+        position++;
+    }
+    return indices;
+}
+
+// X-Wing technique
+bool Grid::xWing() {
+    std::vector<std::set<unsigned short>> indicesForEachLine(9);
+    std::vector<std::set<unsigned short>> indicesForEachColumn(9);
+    for(unsigned short i = 0; i < 9; ++i) {
+        indicesForLine(i, indicesForEachLine[i]);
+        indicesForColumn(i, indicesForEachColumn[i]);
+    }
+    // concentrate just on Lines atm 
+    for(unsigned short digit = 1; digit < 10; ++digit) {
+        std::vector<std::vector<short>> positionsOfDigitsInEachLine(9);
+        for(unsigned short entityId = 0; entityId < 9; ++entityId) {
+            positionsOfDigitsInEachLine[entityId] = occurencesOfADigitInAnEntity(digit, indicesForEachLine[entityId]);
+        }
+
+        for(unsigned short j = 0; j < 9; ++j) {
+            for(unsigned short k = 0; k < 9; ++k) {
+                if(k != j &&
+                 positionsOfDigitsInEachLine[k] == positionsOfDigitsInEachLine[j] &&
+                    positionsOfDigitsInEachLine[k].size() == 2) {
+                    convertPairPresentIndices(indicesForEachLine[j], positionsOfDigitsInEachLine[j]);
+                    convertPairPresentIndices(indicesForEachLine[k], positionsOfDigitsInEachLine[k]);
+
+                    // get indices for each of the squares in the columns, take away positionsOfDigits and delete digit
+                    short column1 = whichColumnsAmIIn(positionsOfDigitsInEachLine[j][0]);
+                    short column2 = whichColumnsAmIIn(positionsOfDigitsInEachLine[j][1]);
+                    short column1Index1 = positionsOfDigitsInEachLine[j][0];
+                    short column1Index2 = positionsOfDigitsInEachLine[k][0];
+                    short column2Index1 = positionsOfDigitsInEachLine[j][1];
+                    short column2Index2 = positionsOfDigitsInEachLine[k][1];
+
+                    std::set<unsigned short> indicesOfColumns;
+                    indicesForColumn(column1, indicesOfColumns);
+                    indicesForColumn(column2, indicesOfColumns);
+                    for(std::set<unsigned short>::iterator it = indicesOfColumns.begin(); 
+                        it != indicesOfColumns.end(); ++it) {
+                        if(*it != column1Index1 && *it != column1Index2 && *it != column2Index1 && *it != column2Index2) {
+                            _domainForEachIndex[*it].erase(digit);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////////
+    for(unsigned short digit = 1; digit < 10; ++digit) {
+        std::vector<std::vector<short>> positionsOfDigitsInEachColumns(9);
+        for(unsigned short entityId = 0; entityId < 9; ++entityId) {
+            positionsOfDigitsInEachColumns[entityId] = occurencesOfADigitInAnEntity(digit, indicesForEachColumn[entityId]);
+        }
+
+        for(unsigned short j = 0; j < 9; ++j) {
+            for(unsigned short k = 0; k < 9; ++k) {
+                if(k != j &&
+                 positionsOfDigitsInEachColumns[k] == positionsOfDigitsInEachColumns[j] &&
+                    positionsOfDigitsInEachColumns[k].size() == 2) {
+                    convertPairPresentIndices(indicesForEachColumn[j], positionsOfDigitsInEachColumns[j]);
+                    convertPairPresentIndices(indicesForEachColumn[k], positionsOfDigitsInEachColumns[k]);
+
+                    // get indices for each of the squares in the columns, take away positionsOfDigits and delete digit
+                    short line1 = whichLineAmIIn(positionsOfDigitsInEachColumns[j][0]);
+                    short line2 = whichLineAmIIn(positionsOfDigitsInEachColumns[j][1]);
+                    short line1Index1 = positionsOfDigitsInEachColumns[j][0];
+                    short line1Index2 = positionsOfDigitsInEachColumns[k][0];
+                    short line2Index1 = positionsOfDigitsInEachColumns[j][1];
+                    short line2Index2 = positionsOfDigitsInEachColumns[k][1];
+
+                    std::set<unsigned short> indicesOfLines;
+                    indicesForLine(line1, indicesOfLines);
+                    indicesForLine(line2, indicesOfLines);
+                    for(std::set<unsigned short>::iterator it = indicesOfLines.begin(); 
+                        it != indicesOfLines.end(); ++it) {
+                        if(*it != line1Index1 && *it != line1Index2 && *it != line2Index1 && *it != line2Index2) {
+                            _domainForEachIndex[*it].erase(digit);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
 
 // operations
 bool Grid::add(const unsigned short index, const unsigned short newDigit)  {
@@ -884,6 +988,9 @@ bool Grid::isValid(const bool isSolutionCheck){
 bool Grid::solve() {
     bool jump = false;
     int counter = 0;
+
+    //_domainForEachIndex[9].erase(4);
+
     while(true) {
         counter++;
         // // Naked Subset
@@ -921,6 +1028,10 @@ bool Grid::solve() {
         if(checkForColumnExclusives()) {
             continue;
         }        
+
+        xWing();
+
+        // skyScrapper();
     
         entityInteractions();
         // Sole candidate leveraging entity interaction
@@ -937,16 +1048,15 @@ bool Grid::solve() {
             jump = false;
             continue;
         }
-        
         break;
     }
     std::cout <<"\n------------- End of solver -------------" << std::endl;
 
-    std::cout <<" Domain of " << 12 << std::endl;
-    for(std::set<unsigned short>::iterator it = _domainForEachIndex[12].begin(); it!= 
-        _domainForEachIndex[12].end(); ++it) {
-            std::cout << *it << " ";
-        }
+    // std::cout <<" Domain of " << 12 << std::endl;
+    // for(std::set<unsigned short>::iterator it = _domainForEachIndex[12].begin(); it!= 
+    //     _domainForEachIndex[12].end(); ++it) {
+    //         std::cout << *it << " ";
+    //     }
 
     domainTotal(_domainForEachIndex);
     std::cout << "isValid: " << printBoolean(isValid()) << std::endl;

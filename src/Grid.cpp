@@ -1004,8 +1004,7 @@ bool Grid::xWing() {
 // Skyscrapper technique
 bool Grid::skyscraper() {
     bool deletedFromDomains = false;
-    std::vector<std::set<unsigned short>> indicesForEachLine(9);
-    std::vector<std::set<unsigned short>> indicesForEachColumn(9);
+    std::vector<std::set<unsigned short>> indicesForEachLine(9), indicesForEachColumn(9);
     for(unsigned short i = 0; i < 9; ++i) {
         indicesForLine(i, indicesForEachLine[i]);
         indicesForColumn(i, indicesForEachColumn[i]);
@@ -1014,37 +1013,72 @@ bool Grid::skyscraper() {
     // columns
     for (unsigned short digit = 1; digit < 10; ++digit)
     {
-        std::vector<std::vector<short>> positionsOfDigitsInEachColumns(9);
-        for (unsigned short entityId = 0; entityId < 9; ++entityId)
-        {
-            positionsOfDigitsInEachColumns[entityId] = occurencesOfADigitInAnEntity(digit, indicesForEachColumn[entityId]);
+        std::vector<std::vector<short>> positionsOfDigitsInEachColumn(9), positionsOfDigitsInEachLine(9);
+        for (unsigned short entityId = 0; entityId < 9; ++entityId) {
+            positionsOfDigitsInEachColumn[entityId] = occurencesOfADigitInAnEntity(digit, indicesForEachColumn[entityId]);
+            positionsOfDigitsInEachLine[entityId] = occurencesOfADigitInAnEntity(digit, indicesForEachLine[entityId]);
         }
 
-        std::vector<std::vector<short>> gridPositions(positionsOfDigitsInEachColumns.size());
-        for(unsigned int i = 0; i < positionsOfDigitsInEachColumns.size(); ++i) {
-            gridPositions[i] = positionsOnGrid(indicesForEachColumn[i], positionsOfDigitsInEachColumns[i]);
+        std::vector<std::vector<short>> columnGridPositions(positionsOfDigitsInEachColumn.size());
+        std::vector<std::vector<short>> lineGridPositions(positionsOfDigitsInEachLine.size());
+        for(unsigned int i = 0; i < 9; ++i) {
+            columnGridPositions[i] = positionsOnGrid(indicesForEachColumn[i], positionsOfDigitsInEachColumn[i]);
+            lineGridPositions[i] = positionsOnGrid(indicesForEachLine[i], positionsOfDigitsInEachLine[i]);
         }
 
-        for (unsigned short j = 0; j < 9; ++j)
-        {
-            for (unsigned short k = 0; k < 9; ++k)
-            {
+        // columns
+        for (unsigned short j = 0; j < 9; ++j) {
+            for (unsigned short k = 0; k < 9; ++k) {
                 if (k == j ||
-                    positionsOfDigitsInEachColumns[k].size() != 2 ||
-                    positionsOfDigitsInEachColumns[j].size() != 2) {
+                    positionsOfDigitsInEachColumn[k].size() != 2 ||
+                    positionsOfDigitsInEachColumn[j].size() != 2) {
                     continue;
                 }
                 short index1 = -1;
                 short index2 = -1;
-                if(positionsOfDigitsInEachColumns[k][0] != positionsOfDigitsInEachColumns[j][0] 
-                    && positionsOfDigitsInEachColumns[k][1] == positionsOfDigitsInEachColumns[j][1]) {
-                    index1 = gridPositions[k][0];
-                    index2 = gridPositions[j][0];
+                if(positionsOfDigitsInEachColumn[k][0] != positionsOfDigitsInEachColumn[j][0] 
+                    && positionsOfDigitsInEachColumn[k][1] == positionsOfDigitsInEachColumn[j][1]) {
+                    index1 = columnGridPositions[k][0];
+                    index2 = columnGridPositions[j][0];
                 }
-                else if(positionsOfDigitsInEachColumns[k][1] != positionsOfDigitsInEachColumns[j][1] 
-                    && positionsOfDigitsInEachColumns[k][0] == positionsOfDigitsInEachColumns[j][0]) {
-                    index1 = gridPositions[k][1];
-                    index2 = gridPositions[j][1];
+                else if(positionsOfDigitsInEachColumn[k][1] != positionsOfDigitsInEachColumn[j][1] 
+                    && positionsOfDigitsInEachColumn[k][0] == positionsOfDigitsInEachColumn[j][0]) {
+                    index1 = columnGridPositions[k][1];
+                    index2 = columnGridPositions[j][1];
+                }
+                if (index1 == -1 || index2 == -1) {
+                    continue;
+                }
+                std::set<unsigned short> indicesIndex1Sees, indicesIndex2Sees;
+                indicesIndexCanSee(index1, indicesIndex1Sees);
+                indicesIndexCanSee(index2, indicesIndex2Sees);
+                std::set<unsigned short> commonIndices = indicesInCommon(indicesIndex1Sees, indicesIndex2Sees);
+                for (std::set<unsigned short>::iterator it = commonIndices.begin(); it != commonIndices.end();
+                     ++it) {
+                    if (*it != index1 && *it != index2) {
+                        _domainForEachIndex[*it].erase(digit);
+                        deletedFromDomains = true;
+                    }
+                }
+            }
+        }
+        //lines
+        for (unsigned short j = 0; j < 9; ++j) {
+            for (unsigned short k = 0; k < 9; ++k)  {
+                if (k == j ||
+                    positionsOfDigitsInEachLine[k].size() != 2 ||
+                    positionsOfDigitsInEachLine[j].size() != 2){
+                    continue;
+                }
+                short index1 = -1;
+                short index2 = -1;
+                if (positionsOfDigitsInEachLine[k][0] != positionsOfDigitsInEachLine[j][0] && positionsOfDigitsInEachLine[k][1] == positionsOfDigitsInEachLine[j][1]) {
+                    index1 = lineGridPositions[k][0];
+                    index2 = lineGridPositions[j][0];
+                }
+                else if (positionsOfDigitsInEachLine[k][1] != positionsOfDigitsInEachLine[j][1] && positionsOfDigitsInEachLine[k][0] == positionsOfDigitsInEachLine[j][0]) {
+                    index1 = lineGridPositions[k][1];
+                    index2 = lineGridPositions[j][1];
                 }
                 if (index1 == -1 || index2 == -1) {
                     continue;

@@ -104,8 +104,8 @@ bool tester() {
     std::cout <<"------------- START OF TESTER -------------" << std::endl;
 
     std::vector<std::pair<std::string,std::string>> testcases;
-    testcases = development();
-//    testcases = readTestcases();
+//    testcases = development();
+    testcases = readTestcases();
     bool isSuccess = true;
 
     for(unsigned int i = 0; i < testcases.size(); ++i) {

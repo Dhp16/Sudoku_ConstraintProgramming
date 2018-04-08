@@ -1003,7 +1003,6 @@ bool Grid::xWing() {
 
 // Skyscrapper technique
 bool Grid::skyscraper() {
-    std::cout << "\nSkyscraper" << std::endl;
     bool deletedFromDomains = false;
     std::vector<std::set<unsigned short>> indicesForEachLine(9);
     std::vector<std::set<unsigned short>> indicesForEachColumn(9);
@@ -1015,7 +1014,6 @@ bool Grid::skyscraper() {
     // columns
     for (unsigned short digit = 1; digit < 10; ++digit)
     {
-        std::cout <<"\ndigit: " << digit << std::endl;
         std::vector<std::vector<short>> positionsOfDigitsInEachColumns(9);
         for (unsigned short entityId = 0; entityId < 9; ++entityId)
         {
@@ -1036,28 +1034,32 @@ bool Grid::skyscraper() {
                     positionsOfDigitsInEachColumns[j].size() != 2) {
                     continue;
                 }
-                // if first two are not equal
+                short index1 = -1;
+                short index2 = -1;
                 if(positionsOfDigitsInEachColumns[k][0] != positionsOfDigitsInEachColumns[j][0] 
                     && positionsOfDigitsInEachColumns[k][1] == positionsOfDigitsInEachColumns[j][1]) {
-
-                    short index1 = gridPositions[k][0];
-                    short index2 = gridPositions[j][0];
-
-                    std::set<unsigned short> indicesIndex1Sees, indicesIndex2Sees;
-                    indicesIndexCanSee(index1, indicesIndex1Sees);
-                    indicesIndexCanSee(index2, indicesIndex2Sees);
-
-                    std::set<unsigned short> commonIndices = indicesInCommon(indicesIndex1Sees,indicesIndex2Sees);
-
-                    for(std::set<unsigned short>::iterator it = commonIndices.begin(); it != commonIndices.end();
-                        ++it) {
-                            if(*it != index1 && *it != index2) {
-                                _domainForEachIndex[*it].erase(digit);
-                                deletedFromDomains = true;
-                            }
+                    index1 = gridPositions[k][0];
+                    index2 = gridPositions[j][0];
+                }
+                else if(positionsOfDigitsInEachColumns[k][1] != positionsOfDigitsInEachColumns[j][1] 
+                    && positionsOfDigitsInEachColumns[k][0] == positionsOfDigitsInEachColumns[j][0]) {
+                    index1 = gridPositions[k][1];
+                    index2 = gridPositions[j][1];
+                }
+                if (index1 == -1 || index2 == -1) {
+                    continue;
+                }
+                std::set<unsigned short> indicesIndex1Sees, indicesIndex2Sees;
+                indicesIndexCanSee(index1, indicesIndex1Sees);
+                indicesIndexCanSee(index2, indicesIndex2Sees);
+                std::set<unsigned short> commonIndices = indicesInCommon(indicesIndex1Sees, indicesIndex2Sees);
+                for (std::set<unsigned short>::iterator it = commonIndices.begin(); it != commonIndices.end();
+                     ++it) {
+                    if (*it != index1 && *it != index2) {
+                        _domainForEachIndex[*it].erase(digit);
+                        deletedFromDomains = true;
                     }
                 }
-                // if next two are not equal
             }
         }
     }
@@ -1114,16 +1116,14 @@ bool Grid::solve() {
 
     while(true) {
         counter++;
-        print();
-        // // Naked Subset
-        //nakedSubset();
-
-        // // Hidden Subset
-        //hiddenSubset(); // very similar except that the subset may appear among others
-        //xWing();
+        // Naked Subset
+        nakedSubset();
+        // Hidden Subset
+        hiddenSubset(); // very similar except that the subset may appear among others
+        xWing();
         skyscraper();
 
-        // // Sole candidate
+        // Sole candidate
         for(short int i = 0; i < 81; ++i) {
             if(_domainForEachIndex[i].size() == 1) {
                 if(add(i,*_domainForEachIndex[i].begin())){
@@ -1200,71 +1200,3 @@ void Grid::print() {
     }
     std::cout << std::endl;
 }
-
-
-
-
-
-
-
-    // for(unsigned int i = 0; i < pairsForEachIndex.size(); ++i) {
-    //     std::cout << "i: " << i << "   ";
-    //     for(unsigned int j = 0; j < pairsForEachIndex[i].size(); ++j) {
-    //         std::cout << "[ "<< pairsForEachIndex[i][j].first << " ; " << pairsForEachIndex[i][j].second << " ], ";  
-    //     }
-    //     std::cout << "\n";
-    // }
-
-                    // std::cout << "positions in first column:  " << positionsOfDigitsInEachColumns[j][0] << "  " << positionsOfDigitsInEachColumns[j][1] << std::endl;
-                    // std::cout << "positoins in second column: " << positionsOfDigitsInEachColumns[k][0] << "  " << positionsOfDigitsInEachColumns[k][1] << std::endl;
-
-
-
-
-
-                // if(positionsOfDigitsInEachColumns[k][0] == positionsOfDigitsInEachColumns[j][0] 
-                //     && positionsOfDigitsInEachColumns[k][1] != positionsOfDigitsInEachColumns[j][1]) {
-
-                //         // 0 spot is the same so should delete those seen by the 1s
-                //     convertPairPresentIndices(indicesForEachColumn[j], positionsOfDigitsInEachColumns[j]);
-                //     convertPairPresentIndices(indicesForEachColumn[k], positionsOfDigitsInEachColumns[k]);
-
-                //     short index1 = positionsOfDigitsInEachColumns[k][1];
-                //     short index2 = positionsOfDigitsInEachColumns[j][1];
-
-                //     // TEMP
-
-
-                //     std::cout <<"digit: " << digit << std::endl;
-                //     std::cout <<"index1 : " << index1 << "   index2: " << index2 << std::endl;
-                //     std::cout <<"index3 : " << positionsOfDigitsInEachColumns[k][0] << "   index4: " << positionsOfDigitsInEachColumns[j][0] << std::endl;
-
-                //     ///////
-
-                //     std::set<unsigned short> indicesIndex1Sees, indicesIndex2Sees;
-                //     indicesIndexCanSee(index1, indicesIndex1Sees);
-                //     indicesIndexCanSee(index2, indicesIndex2Sees);
-
-                //     std::set<unsigned short> commonIndices = indicesInCommon(indicesIndex1Sees,indicesIndex2Sees);
-
-                //     for(std::set<unsigned short>::iterator it = commonIndices.begin(); it != commonIndices.end();
-                //         ++it) {
-                //             if(*it != index1 && *it != index2) {
-                //                 _domainForEachIndex[*it].erase(digit);
-                //                 deletedFromDomains = true;
-                //                 std::cout <<"deleted " << digit << " from " << *it << std::endl;
-                //             }
-                //     }
-
-
-                // }
-
-        //                 // temp
-        // for(int i =0; i < positionsOfDigitsInEachColumns.size(); ++i) {
-        //     std::cout << "Column  " << i << "  | ";
-        //     for(int j = 0; j < positionsOfDigitsInEachColumns[i].size(); ++j) {
-        //         std::cout << positionsOfDigitsInEachColumns[i][j] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // //

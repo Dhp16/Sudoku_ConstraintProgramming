@@ -1097,7 +1097,6 @@ bool Grid::skyscraper() {
             }
         }
     }
-
     return deletedFromDomains;
 }
 
@@ -1145,9 +1144,7 @@ bool Grid::isValid(const bool isSolutionCheck){
 bool Grid::solve() {
     bool jump = false;
     int counter = 0;
-
-    //_domainForEachIndex[9].erase(4);
-
+    print();
     while(true) {
         counter++;
         // Naked Subset

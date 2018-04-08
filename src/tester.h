@@ -8,8 +8,8 @@
 #include <utility>
 
 std::vector<std::pair<std::string, std::string>> readTestcases() {
-    std::vector<std::pair<std::string, std::string>> testcases(3);
-    for(unsigned int i = 0; i < 3; ++i) {
+    std::vector<std::pair<std::string, std::string>> testcases(8);
+    for(unsigned int i = 0; i < 8; ++i) {
         std::string fileName;
         switch(i) {
             case 0:
@@ -19,6 +19,21 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
                 fileName = "hard";
                 break;
             case 2:
+                fileName = "evil_fromExtremeSudokuInfo";
+                break;
+            case 3:
+                fileName = "excessive_fromExtremeSudokuInfo";
+                break;
+            case 4:
+                fileName = "egregious_fromExtremeSudokuInfo";
+                break;
+            case 5:
+                fileName = "excruciating_fromExtremeSudokuInfo";
+                break;
+            case 6:
+                fileName = "extreme_fromExtremeSudokuInfo";
+                break;
+            case 7:
                 fileName = "impossible";
                 break;
         }

@@ -35,8 +35,8 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
     return testcases;
 }
 std::vector<std::pair<std::string, std::string>> development() {
-    std::vector<std::pair<std::string, std::string>> testcases(5);
-    for(unsigned int i = 0; i < 5; ++i) {
+    std::vector<std::pair<std::string, std::string>> testcases(6);
+    for(unsigned int i = 0; i < 6; ++i) {
         std::string fileName;
         switch(i) {
             case 0:
@@ -53,6 +53,9 @@ std::vector<std::pair<std::string, std::string>> development() {
                 break;
             case 4:
                 fileName = "XWing";
+                break;
+            case 5:
+                fileName = "Skyscraper";
                 break;
         }
         testcases[i].first = fileName;
@@ -101,8 +104,8 @@ bool tester() {
     std::cout <<"------------- START OF TESTER -------------" << std::endl;
 
     std::vector<std::pair<std::string,std::string>> testcases;
-//    testcases = development();
-    testcases = readTestcases();
+    testcases = development();
+//    testcases = readTestcases();
     bool isSuccess = true;
 
     for(unsigned int i = 0; i < testcases.size(); ++i) {

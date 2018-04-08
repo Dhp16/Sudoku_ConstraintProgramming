@@ -42,16 +42,22 @@ class Grid
     unsigned short getLineId(const unsigned short squareId, const unsigned short lineNumber);
     unsigned short getColumnId(const unsigned short squareId, const unsigned short columnId);
     unsigned short whichLineAmIIn(const unsigned short index);
-    unsigned short whichColumnsAmIIn(const unsigned short index);
+    unsigned short whichColumnAmIIn(const unsigned short index);
+    unsigned short whichSquareAmIIn(const unsigned short index);
+    void indicesIndexCanSee(const short index, std::set<unsigned short>& indicesThatCanBeSeen);
 
     void updateAffectedDomains(const unsigned short index, const unsigned short digits);
     void removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
                         const unsigned short digitToRemove);
     void removeExclusivesFromColumnDomains(const unsigned short squareId, const unsigned short columnId,
                         const unsigned short digitToRemove);
+    std::set<unsigned short> indicesInCommon(const std::set<unsigned short>& indices1,
+            const std::set<unsigned short>& indices2);
+    std::vector<short> positionsOnGrid(const std::set<unsigned short> &entityIndices,
+                                             const std::vector<short> &pairPresentIndices);
 
-    // Unique Candidate
-    bool checkForSquareExclusives();
+        // Unique Candidate
+        bool checkForSquareExclusives();
     bool checkForLineExclusives();
     bool checkForColumnExclusives();
     bool exclusiveFinder(std::set<unsigned short>& indicesOfEntity);
@@ -92,7 +98,8 @@ class Grid
     std::vector<short> occurencesOfADigitInAnEntity(const short digit, const std::set<unsigned short>& entityIndices);
     //
     bool xWing(); 
-    
+    bool skyscraper();
+
     // members:
     std::vector<std::vector<unsigned short*>> _entities;
     std::vector<unsigned short> _grid;

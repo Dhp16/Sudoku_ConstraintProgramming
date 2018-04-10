@@ -436,7 +436,6 @@ unsigned short Grid::whichSquareAmIIn(const unsigned short index) {
     }
 }
 
-
 void Grid::removeExclusivesFromLinesDomains(const unsigned short squareId, const unsigned short lineId,
                         const unsigned short digitToRemove) 
 {
@@ -991,7 +990,6 @@ bool Grid::xWing() {
                         it != indicesOfLines.end(); ++it) {
                         if(*it != line1Index1 && *it != line1Index2 && *it != line2Index1 && *it != line2Index2) {
                             _domainForEachIndex[*it].erase(digit);
-                            deletedFromDomains = true;
                         }
                     }
                 }
@@ -1160,7 +1158,6 @@ bool Grid::solve() {
                 if(add(i,*_domainForEachIndex[i].begin())){
                     updateAffectedDomains(i, *_domainForEachIndex[i].begin());              
                     jump = true;
-                    break;
                 }
             }
         }
@@ -1231,3 +1228,9 @@ void Grid::print() {
     }
     std::cout << std::endl;
 }
+
+
+        // if (*it == 79)
+        // {
+        //     std::cout << "Deleted " << digit << " from " << *it << std::endl;
+        // }

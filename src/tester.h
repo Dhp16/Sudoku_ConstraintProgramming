@@ -8,7 +8,7 @@
 #include <utility>
 
 std::vector<std::pair<std::string, std::string>> readTestcases() {
-    std::vector<std::pair<std::string, std::string>> testcases(8);
+    std::vector<std::pair<std::string, std::string>> testcases;
     for(unsigned int i = 0; i < 8; ++i) {
         std::string fileName;
         switch(i) {
@@ -37,15 +37,14 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
                 fileName = "impossible";
                 break;
         }
-        testcases[i].first = fileName;
         std::string folder = std::string("testcases//");
         std::string extention =  std::string(".txt");
-        fileName = folder + fileName + extention;
+        std::string pathAndfileName = folder + fileName + extention;
         std::fstream reader;
-        reader.open(fileName);
+        reader.open(pathAndfileName);
         std::string inputGrid;
         reader >> inputGrid;
-        testcases[i].second = inputGrid;
+        testcases.push_back(std::pair<std::string,std::string>(fileName, inputGrid));
     }
     return testcases;
 }
@@ -112,6 +111,7 @@ bool solving(std::string testcase) {
     std::cout <<"------------- start of solver -------------" << std::endl;
     Grid grid(testcase);
     return grid.solve();
+    return true;
     std::cout <<"-------------  end of solver  -------------" << std::endl;
 }
 
@@ -122,8 +122,8 @@ bool tester() {
 //    testcases = development();
     testcases = readTestcases();
     bool isSuccess = true;
-
     for(unsigned int i = 0; i < testcases.size(); ++i) {
+        std::cout <<"\n\n======================================================";
         std::cout <<"\n\n-----------> Starting testcase: " << testcases[i].first << std::endl;
         // if(!basicBoardMechanics(testcases[i].second)) {
         //     std::cout << "Board mechanics failed" << std::endl;
@@ -136,7 +136,6 @@ bool tester() {
         clock_t end = clock();
         std::cout << "Solving took: " << double(end - begin) / CLOCKS_PER_SEC << " seconds." << std::endl;
     }
-
     std::cout <<"-------------  END OF TESTER  -------------" << std::endl;
     return isSuccess;
 }

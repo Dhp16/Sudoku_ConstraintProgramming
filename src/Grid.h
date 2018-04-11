@@ -18,6 +18,8 @@ class Grid
     bool resetBoard();
 
     bool solve();
+    bool alternateSolve();
+    bool isBroken();
 
     void print();
   private:
@@ -56,8 +58,8 @@ class Grid
     std::vector<short> positionsOnGrid(const std::set<unsigned short> &entityIndices,
                                              const std::vector<short> &pairPresentIndices);
 
-        // Unique Candidate
-        bool checkForSquareExclusives();
+    // Unique Candidate
+    bool checkForSquareExclusives();
     bool checkForLineExclusives();
     bool checkForColumnExclusives();
     bool exclusiveFinder(std::set<unsigned short>& indicesOfEntity);

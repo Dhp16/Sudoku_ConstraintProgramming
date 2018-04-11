@@ -108,10 +108,23 @@ bool basicBoardMechanics(std::string testcase) {
 }
 
 bool solving(std::string testcase) {
-    std::cout <<"------------- start of solver -------------" << std::endl;
     Grid grid(testcase);
-    return grid.solve();
-    return true;
+    grid.print();
+    std::cout <<"------------- start of solver -------------" << std::endl;
+    if(grid.solve()) {
+        std::cout <<"SUCCESS by constraints" << std::endl;
+        grid.print();
+        return true;
+    } else {
+        bool alternateSuccess = grid.alternateSolve();
+        
+        if(alternateSuccess) {
+            std::cout << "SUCCESS with alternate solver" << std::endl;
+        } else {
+            std::cout << "FAIL even with alternate solver" << std::endl;
+        }
+        grid.print();
+    }
     std::cout <<"-------------  end of solver  -------------" << std::endl;
 }
 

@@ -8,6 +8,10 @@
 
 #define isLegit(a) (a > 0 && a < 10)
 
+unsigned int randomInt(){
+    return 1 + (rand() % static_cast<int>(8));
+}
+
 std::string printBoolean(const bool isTrue) {
     if(isTrue) {
         return std::string("true");
@@ -1142,7 +1146,6 @@ bool Grid::isValid(const bool isSolutionCheck){
 bool Grid::solve() {
     bool jump = false;
     int counter = 0;
-    print();
     while(true) {
         counter++;
         // Naked Subset
@@ -1198,23 +1201,44 @@ bool Grid::solve() {
         }
         break;
     }
-    std::cout <<"\n------------- End of solver -------------" << std::endl;
-
     // std::cout <<" Domain of " << 12 << std::endl;
     // for(std::set<unsigned short>::iterator it = _domainForEachIndex[12].begin(); it!= 
     //     _domainForEachIndex[12].end(); ++it) {
     //         std::cout << *it << " ";
     //     }
 
-    domainTotal(_domainForEachIndex);
-    std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
-    std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
-    print();
+    // domainTotal(_domainForEachIndex);
+    // std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
+    // std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
 
     std::cout << std::endl;
 
     return isValid(true);
 }
+bool Grid::isBroken() { // check if it is blocked because it is wrong;
+    return true;
+}
+
+bool Grid::alternateSolve() {
+    for(unsigned int i = 0; i < _domainForEachIndex.size(); ++i) {
+        if(_domainForEachIndex[i].size() != 0) {
+            std::set<unsigned short> domain, backUp;
+            backUp = _domainForEachIndex[i];
+            unsigned short x = *std::next(_domainForEachIndex[i].begin(), randomInt());
+            domain.insert(*_domainForEachIndex[i].begin());
+            _domainForEachIndex[i] = domain;
+            if(solve()) {
+                return true;
+            }
+            else {
+                if(isBroken()) {
+                    _domainForEachIndex[i] = backUp;
+                }
+            }
+        }
+    }
+}
+
 void Grid::print() {
     std::cout <<"Grid:" << std::endl;
     for(unsigned int i = 0; i < 81; ++i) {

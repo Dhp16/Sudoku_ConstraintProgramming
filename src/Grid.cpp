@@ -175,8 +175,14 @@ Grid::Grid(std::string grid): _latestIndexChanged(81),  _entities(27, std::vecto
     std::cout <<"isValid: " << printBoolean(isValidGrid) << std::endl;
     std::cout <<"isSolution: " << printBoolean(isSolution) << std::endl;
 }
+Grid::Grid(const Grid& grid) {
+    _domainForEachIndex = grid.getDomainForEachIndex();
+}
 Grid::~Grid(){}
 //
+std::vector<std::set<unsigned short>> Grid::getDomainForEachIndex() const{
+    return _domainForEachIndex;
+}
 
 // setup
 void Grid::stringToVector(const std::string& grid) {
@@ -1201,22 +1207,28 @@ bool Grid::solve() {
         }
         break;
     }
-    // std::cout <<" Domain of " << 12 << std::endl;
-    // for(std::set<unsigned short>::iterator it = _domainForEachIndex[12].begin(); it!= 
-    //     _domainForEachIndex[12].end(); ++it) {
-    //         std::cout << *it << " ";
-    //     }
-
-    // domainTotal(_domainForEachIndex);
-    // std::cout << "isValid: " << printBoolean(isValid()) << std::endl;
-    // std::cout << "isSolution: " << printBoolean(isValid(true)) << std::endl;
-
     std::cout << std::endl;
 
     return isValid(true);
 }
 bool Grid::isBroken() { // check if it is blocked because it is wrong;
-    return true;
+    int noOptionsCounter = 0;
+    int foundCounter = 0;
+    for (unsigned int i = 0; i < _domainForEachIndex.size(); ++i)
+    {
+        if(_domainForEachIndex[i].empty()) {
+            noOptionsCounter++;
+        }
+    }
+    for(unsigned int i = 0; i < 81; ++i) {
+        if(_grid[i] == 0)
+            foundCounter++;
+    }
+    if(noOptionsCounter == 0 && foundCounter != 81) {
+        return true;
+    } else {
+        return !isValid(true);
+    }
 }
 
 bool Grid::alternateSolve() {
@@ -1237,6 +1249,7 @@ bool Grid::alternateSolve() {
             }
         }
     }
+    domainTotal(_domainForEachIndex);
 }
 
 void Grid::print() {
@@ -1253,8 +1266,3 @@ void Grid::print() {
     std::cout << std::endl;
 }
 
-
-        // if (*it == 79)
-        // {
-        //     std::cout << "Deleted " << digit << " from " << *it << std::endl;
-        // }

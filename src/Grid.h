@@ -10,6 +10,7 @@ class Grid
 {
   public:
     Grid(std::string grid);
+    Grid(const Grid& grid); // copy constructor
     ~Grid();
     bool isValid(const bool isSolutionCheck=false);
 
@@ -17,6 +18,7 @@ class Grid
     bool cancelPreviousChange();
     bool resetBoard();
 
+    std::vector<std::set<unsigned short>> getDomainForEachIndex() const;
     bool solve();
     bool alternateSolve();
     bool isBroken();

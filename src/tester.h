@@ -9,7 +9,7 @@
 
 std::vector<std::pair<std::string, std::string>> readTestcases() {
     std::vector<std::pair<std::string, std::string>> testcases;
-    for(unsigned int i = 0; i < 8; ++i) {
+    for(unsigned int i = 0; i < 12; ++i) {
         std::string fileName;
         switch(i) {
             case 0:
@@ -34,17 +34,29 @@ std::vector<std::pair<std::string, std::string>> readTestcases() {
                 fileName = "extreme_fromExtremeSudokuInfo";
                 break;
             case 7:
+                fileName = "expert_from247Sudoku";
+                break;
+            case 8:
+                fileName = "notFun_fromArizonEdu";
+                break;
+            case 9:
+                fileName = "hard_fromNyTimes";
+                break;
+            case 10:
+                fileName = "veryHard_from7Sudoku";
+                break;
+            case 11:
                 fileName = "impossible";
                 break;
-        }
-        std::string folder = std::string("testcases//");
-        std::string extention =  std::string(".txt");
-        std::string pathAndfileName = folder + fileName + extention;
-        std::fstream reader;
-        reader.open(pathAndfileName);
-        std::string inputGrid;
-        reader >> inputGrid;
-        testcases.push_back(std::pair<std::string,std::string>(fileName, inputGrid));
+            }
+            std::string folder = std::string("testcases//");
+            std::string extention = std::string(".txt");
+            std::string pathAndfileName = folder + fileName + extention;
+            std::fstream reader;
+            reader.open(pathAndfileName);
+            std::string inputGrid;
+            reader >> inputGrid;
+            testcases.push_back(std::pair<std::string, std::string>(fileName, inputGrid));
     }
     return testcases;
 }

@@ -25,6 +25,7 @@ class Grid
 
     void print();
   private:
+    void revert(const Grid& backUpGrid);
 
     void stringToVector(const std::string& grid);
     void createLine(const unsigned short index, std::vector<unsigned short*>& line);
@@ -104,23 +105,19 @@ class Grid
     bool xWing(); 
     bool skyscraper();
 
-    // members:
-    std::vector<std::vector<unsigned short*>> _entities;
-    std::vector<unsigned short> _grid;
-    std::vector<unsigned short> _initialGrid;
-    unsigned short _latestIndexChanged;
-    std::map<unsigned short, unsigned short> _indexToSquare;
-    std::vector<std::set<unsigned short>> _domainForEachIndex;
-    std::vector<std::set<unsigned short>> _indexLinkage; 
-    std::set<unsigned short> _goldenOriginals;
-  
-    // for advanced solver
-    std::vector<std::set<unsigned short>> _advancedDomains;
-
-
     // temp
     int domainTotal(std::vector<std::set<unsigned short>> domainOptions);
 
+    public:
+      std::vector<std::vector<unsigned short *>> _entities;
+      std::vector<unsigned short> _grid;
+      std::vector<unsigned short> _initialGrid;
+      unsigned short _latestIndexChanged;
+      std::map<unsigned short, unsigned short> _indexToSquare;
+      std::vector<std::set<unsigned short>> _domainForEachIndex;
+      std::vector<std::set<unsigned short>> _indexLinkage;
+      std::set<unsigned short> _goldenOriginals;
+      std::vector<std::set<unsigned short>> _advancedDomains;
 };
 
 

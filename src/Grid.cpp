@@ -9,7 +9,7 @@
 #define isLegit(a) (a > 0 && a < 10)
 
 unsigned int randomInt(){
-    return 1 + (rand() % static_cast<int>(8));
+    return 1 + (rand() % static_cast<int>(9));
 }
 
 std::string printBoolean(const bool isTrue) {
@@ -177,11 +177,32 @@ Grid::Grid(std::string grid): _latestIndexChanged(81),  _entities(27, std::vecto
 }
 Grid::Grid(const Grid& grid) {
     _domainForEachIndex = grid.getDomainForEachIndex();
+    _entities = grid._entities;
+    _grid = grid._grid;
+    _initialGrid = grid._initialGrid;
+    _latestIndexChanged = grid._latestIndexChanged;
+    _indexToSquare = grid._indexToSquare;
+    _domainForEachIndex =grid._domainForEachIndex;
+    _indexLinkage = grid._indexLinkage;
+    _goldenOriginals = grid._goldenOriginals;
+    _advancedDomains = grid._advancedDomains;
 }
 Grid::~Grid(){}
 //
 std::vector<std::set<unsigned short>> Grid::getDomainForEachIndex() const{
     return _domainForEachIndex;
+}
+void Grid::revert(const Grid& backUpGrid) {
+    _domainForEachIndex = backUpGrid._domainForEachIndex;
+    _entities = backUpGrid._entities;
+    _grid = backUpGrid._grid;
+    _initialGrid = backUpGrid._initialGrid;
+    _latestIndexChanged = backUpGrid._latestIndexChanged;
+    _indexToSquare = backUpGrid._indexToSquare;
+    _domainForEachIndex = backUpGrid._domainForEachIndex;
+    _indexLinkage = backUpGrid._indexLinkage;
+    _goldenOriginals = backUpGrid._goldenOriginals;
+    _advancedDomains = backUpGrid._advancedDomains;
 }
 
 // setup
@@ -633,8 +654,6 @@ void Grid::indicesIndexCanSee(const short index, std::set<unsigned short>& indic
     indicesForColumn(columnId, indicesThatCanBeSeen);
     addDigitsForSquare(squareId, indicesThatCanBeSeen);
 }
-
-
 // tools for naked subset
 void Grid::getPairsForEachIndex(std::vector<std::set<unsigned short>>& domainsForEachIndex,
     std::vector<std::vector<std::pair<short,short>>>& pairsForEachIndex) 
@@ -1207,8 +1226,6 @@ bool Grid::solve() {
         }
         break;
     }
-    std::cout << std::endl;
-
     return isValid(true);
 }
 bool Grid::isBroken() { // check if it is blocked because it is wrong;
@@ -1232,10 +1249,11 @@ bool Grid::isBroken() { // check if it is blocked because it is wrong;
 }
 
 bool Grid::alternateSolve() {
+    Grid gridBackup(*this);
+    int counter = 0;
     for(unsigned int i = 0; i < _domainForEachIndex.size(); ++i) {
         if(_domainForEachIndex[i].size() != 0) {
             std::set<unsigned short> domain, backUp;
-            backUp = _domainForEachIndex[i];
             unsigned short x = *std::next(_domainForEachIndex[i].begin(), randomInt());
             domain.insert(*_domainForEachIndex[i].begin());
             _domainForEachIndex[i] = domain;
@@ -1244,12 +1262,27 @@ bool Grid::alternateSolve() {
             }
             else {
                 if(isBroken()) {
-                    _domainForEachIndex[i] = backUp;
+                    revert(gridBackup);
+                }
+                else {
+                    continue;
                 }
             }
         }
+        // if(i == 80) {
+        //     counter++;
+        // }
+        // if(counter > 10) {
+        //     return false;
+        // }
     }
-    domainTotal(_domainForEachIndex);
+    if(isValid(true)) {
+        domainTotal(_domainForEachIndex);
+        return true;
+    }
+    else {
+        return alternateSolve();
+    }
 }
 
 void Grid::print() {
